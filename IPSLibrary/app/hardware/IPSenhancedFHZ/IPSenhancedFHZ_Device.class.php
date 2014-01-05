@@ -27,7 +27,7 @@
 	 *  Version 1.0.1, 04.01.2014<br/>
     */
 
-	class IPSenhancedFHZ {
+	class IPSenhancedFHZ  {
 
 		/**
 		 * @public
@@ -38,12 +38,13 @@
 		 * @private
 		 */
 		private $eFHZ_InstanceId;	
-		public $ConnectionReady=false;
+		public  $ConnectionReady=false;
 		private $FTDIInstanceId;		
 		private $config;		
 		private $Housecode;
-		private $FHT_Name;
-		private $FHT_Location;		
+		private $Name;
+		private $Leap;
+		private $Description;
 		private $S1Buffer=array();
 		private $S2Buffer=array();
 		private $OK=false;
@@ -65,6 +66,8 @@
 				$i+=1;
 				if ($configId[c_Property_eFHZ_Name]==IPS_GetName($this->deviceId)) {
 					$this->Housecode=$keys[$i-1];
+					$this->Leap=$this->config[(string)$this->Housecode][c_Property_eFHZ_Leap];
+					$this->Description=$this->config[(string)$this->Housecode][c_Property_eFHZ_Description];
 					break;
 				}
 			}
@@ -276,9 +279,9 @@
 		}
 
 		// ----------------------------------------------------------------------------------------------------------------------------
-		public function sFHZ_SetDateAndTime($timestamp=0,$leap=false) {
+		public function sFHZ_SetDateAndTime($timestamp=0) {
 			if ($timestamp==0) $timestamp=time();
-			$timestamp=$this->CorrectLeapTime($timestamp,$leap);
+			$timestamp=$this->CorrectLeapTime($timestamp,$this->Leap);
 			if ($this->ConnectionReady) {
 	         $this->S2Buffer=array();
 	         $this->S2Buffer[0x60]=(int)date("y",$timestamp);
@@ -441,11 +444,11 @@
 		}
 
 		// ----------------------------------------------------------------------------------------------------------------------------
-		public function bFHT_SetMode($Mode,$leap=false) {
+		public function bFHT_SetMode($Mode) {
 			if ($this->ConnectionReady) {
 				if ($Mode>1) {
 					$timestamp=$Mode;
-					$st_t=$this->CorrectLeapTime(time(),$leap)+1200;
+					$st_t=$this->CorrectLeapTime(time(),$this->Leap)+1200;
 					if ($timestamp<$st_t) $timestamp=$st_t;
 					$dif=$timestamp-$st_t;
 					if ($dif>86400) {
@@ -538,6 +541,7 @@
 		}
 
 	}
+
 
 	/** @}*/
 
