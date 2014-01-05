@@ -5,6 +5,8 @@
 IPSenhancedFHZ (ehem. eFHT/eFHZ-Bricks -> IP-Symcon V1) 
 Realisierung für IPSLibrary (Founder: brownson)
 
+## VERSION
+1.0.2
 
 ## ABOUT
 IPSLibrary is Script Library für IP-Symcon
