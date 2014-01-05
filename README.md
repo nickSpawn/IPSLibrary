@@ -1,8 +1,8 @@
-IPSLibrary
+﻿IPSLibrary
 ==========
 
 ## PROJECT
-IPSenhancedFHZ (ehem. eFHT/eFHZ-Bricks für IP-Symcon V1) 
+IPSenhancedFHZ (ehem. eFHT/eFHZ-Bricks -> IP-Symcon V1) 
 Realisierung für IPSLibrary (Founder: brownson)
 
 
