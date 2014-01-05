@@ -31,7 +31,7 @@
 	IPSUtils_Include("IPSLogger.inc.php",								"IPSLibrary::app::core::IPSLogger");
 	IPSUtils_Include("IPSenhancedFHZ_Configuration.inc.php",		"IPSLibrary::config::hardware::IPSenhancedFHZ");
 	IPSUtils_Include("IPSenhancedFHZ_Constants.inc.php",			"IPSLibrary::app::hardware::IPSenhancedFHZ");
-	IPSUtils_Include("IPSenhancedFHZ_Device.class.php",			"IPSLibrary::app::hardware::IPSenhancedFHZ");
+	IPSUtils_Include("IPSenhancedFHZ_Functions.class.php",			"IPSLibrary::app::hardware::IPSenhancedFHZ");
 
    /**
     * @class CheckFHZ
@@ -42,7 +42,7 @@
     * @version
     *   Version 1.0.1, 04.01.2014<br/>
     */
-	class CheckFHZ extends IPSenhancedFHZ {
+	class CheckFHZ extends eFHZ_Base {
 		
 		public function __construct($ReceivedString,$deviceID) {
 			$lang=IPSenhancedFHZ_GetLanguages();
@@ -69,9 +69,9 @@
 						$this->SetIdentValue(c_control_eFHZ_position,$value/2.55,$deviceID);
 					}
 					else {
-						if (($this->status&0xef)==0x2a) $drivecontrol_mode=1;
-						if (($this->status&0xef)==0x2e) $drivecontrol_mode=2;
-						if (($this->status&0xef)==0x2c) $drivecontrol_mode=3;
+						if (($status&0xef)==0x2a) $drivecontrol_mode=1;
+						if (($status&0xef)==0x2e) $drivecontrol_mode=2;
+						if (($status&0xef)==0x2c) $drivecontrol_mode=3;
 						$this->SetIdentValue(c_control_eFHZ_drivecontrol_timer,$value/2,$deviceID);
 					}
 					if ($drivecontrol_mode!=$this->GetIdentValue(c_control_eFHZ_drivecontrol,$deviceID)) {
@@ -225,7 +225,6 @@
 		return true;	
 		}
 	}	
-
 
 	$config=IPSenhancedFHZ_GetFHZConfiguration();
 	$rcv = $_IPS['RECEIVE'];
