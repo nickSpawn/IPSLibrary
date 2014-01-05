@@ -22,15 +22,11 @@
 	 * @file          IPSenhancedFHZ_Constants.inc.php
 	 * @author        Günter Strassnigg
 	 * @version
-	 *  Version 1.00.1, 26.03.2013<br/>
+	 *  Version 1.0.1, 04.01.2014<br/>
 	 *
 	 * Definition der Konstanten IPSenhancedFHZ
 	 *
 	 */
-	define ('c_eFHZ_debug',												true);
-	define ('c_eFHZ_debug_logging',									false);
-	define ('c_eFHZ_trace_logging',									false);
-	define ('c_eFHZ_language',											"DE");
 
 	// Confguration Device Property Definition 
 	define ('c_control_eFHZ_autoinit',								"autoinit");
@@ -65,6 +61,7 @@
 	define ('c_Property_eFHZ_Description',							"Beschreibung");
 	define ('c_Property_eFHZ_HouseCode',							"Hauscode");
 	define ('c_Property_eFHZ_Address',								"Adresse");
+	define ('c_Property_eFHZ_Leap',									"Schaltjahrberichtigung");
    
 	define ('c_profile_eFHZ_drivecontrol_normal',				"drivecontrol_normal");
 	define ('c_profile_eFHZ_drivecontrol_valvedrive',			"drivecontrol_valvedrive");

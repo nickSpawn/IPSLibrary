@@ -22,7 +22,7 @@
 	 * @file          IPSenhancedFHZ_Language_EN.inc.php
 	 * @author        Günter Strassnigg
 	 * @version
-	 *  Version 1.00.1, 26.03.2013<br/>
+	 *  Version 1.0.1, 04.01.2014<br/>
 	 *
 	 * Definition der Konstanten IPSenhancedFHZ
 	 *
@@ -86,6 +86,10 @@
 		$lang['c_profile_eFHZ_drivecontrol_testmode']=			"testmode";
 		$lang['c_profile_eFHZ_drivecontrol_syncing']=			"syncing";
 
+		$lang['c_LogMess_eFHZ_new_time_is_set']=					"The date and time for %Device% has been changed.";
+		$lang['c_LogMess_eFHZ_which_day']=							array("Monday","Tuesday","Wednesday","Thursday","Friday","Satuerday","Sunday");
+		$lang['c_LogMess_eFHZ_new_weekprogram_is_set']=			"The weekprogram for '%Value%'' and %Device% has been changed.";
+		
 		return $lang;
 	}
 	

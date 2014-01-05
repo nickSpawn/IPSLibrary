@@ -22,14 +22,14 @@
 	 * @file          IPSenhancedFHZ.inc.php
 	 * @author        Günter Strassnigg
 	 * @version
-	 *  Version 1.00.1, 01.04.2013<br/>
+	 *  Version 1.0.1, 04.01.2014<br/>
 	 *
 	 */
 	
 	IPSUtils_Include("IPSLogger.inc.php",								"IPSLibrary::app::core::IPSLogger");
-	IPSUtils_Include("IPSenhancedFHZ_Constants.inc.php",			"IPSLibrary::app::hardware::IPSenhancedFHZ");
 	IPSUtils_Include("IPSenhancedFHZ_Configuration.inc.php",		"IPSLibrary::config::hardware::IPSenhancedFHZ");
 	IPSUtils_Include("IPSenhancedFHZ_Custom.inc.php",				"IPSLibrary::config::hardware::IPSenhancedFHZ");
+	IPSUtils_Include("IPSenhancedFHZ_Constants.inc.php",			"IPSLibrary::app::hardware::IPSenhancedFHZ");
 	IPSUtils_Include("IPSenhancedFHZ_Device.class.php",			"IPSLibrary::app::hardware::IPSenhancedFHZ");
 
 
