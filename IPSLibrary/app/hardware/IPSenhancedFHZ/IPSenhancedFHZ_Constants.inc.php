@@ -61,6 +61,7 @@
 	define ('c_Property_eFHZ_Description',							"Beschreibung");
 	define ('c_Property_eFHZ_HouseCode',							"Hauscode");
 	define ('c_Property_eFHZ_Address',								"Adresse");
+	define ('c_Property_eFHZ_Leap',									"Schaltjahrberichtigung");
    
 	define ('c_profile_eFHZ_drivecontrol_normal',				"drivecontrol_normal");
 	define ('c_profile_eFHZ_drivecontrol_valvedrive',			"drivecontrol_valvedrive");
