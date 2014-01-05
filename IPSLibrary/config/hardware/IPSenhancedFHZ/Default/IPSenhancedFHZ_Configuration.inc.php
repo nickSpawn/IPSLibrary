@@ -22,12 +22,61 @@
 	 * @file          IPSenhancedFHZ_Configuration.inc.php
 	 * @author        Günter Strassnigg
 	 * @version
-	 *  Version 1.00.1, 26.03.2013<br/>
+	 *  Version 1.0.1, 04.01.2014<br/>
 	 *
 	 * Definition der Konstanten IPSenhancedFHZ
 	 *
 	 *
+	 */
 
+	/** Debugging des Empfangprotokolles
+	 *
+	 * Speichern des Empfangstrings in der Debug Variable
+	 * 
+	 * true:		Die Debugvariable wird überschrieben.
+	 * false:	Die Debugvariable wird nicht beschrieben.
+	 *          Hat jedoch keinen Einfluß auf die LogMeldungen im IPS Melungsfenster	 
+	 *
+	 * Dieser Parameter kann jederzeit geändert werden, keine Installation erforderlich.
+	 */
+   define ('c_eFHZ_debug',												false);
+
+   
+	/** Loggen der Anfordungen(Statusänderungen) über IPSenhancedFHZ
+	 *
+	 * (mitloggen über IPSLogger - IPSLogger muss installiert worden sein.)
+	 * 
+	 * true:		wird verarbeitet.
+	 * false:	wird nicht verarbeitet.	 
+	 *
+	 * Dieser Parameter kann jederzeit geändert werden, keine Installation erforderlich.
+	 */
+	define ('c_eFHZ_debug_logging',									false);
+
+	/** Loggen der Empfangsmeldungen(Statusänderungen) über IPSenhancedFHZ
+	 *
+	 * (mitloggen über IPSLogger - IPSLogger muss installiert worden sein.)
+	 * 
+	 * true:		wird verarbeitet.
+	 * false:	wird nicht verarbeitet.	 
+	 *
+	 * Dieser Parameter kann jederzeit geändert werden, keine Installation erforderlich.
+	 */
+	define ('c_eFHZ_trace_logging',									false);
+
+	/** Eingestellte Sprache
+	 *
+	 * Betrifft:  Namen der Statusvariablen -> Definierung vor Installation des Modules
+	 *            Ausgabe der Meldungen
+	 *
+	 * DE =>		deutsch (=Voreinstellung)
+	 * EN =>		englisch
+	 *
+	 * Dieser Parameter kann jederzeit geändert werden, keine Installation erforderlich.
+	 */
+	define ('c_eFHZ_language',											"DE");
+
+	/**
 	 *
 	 * Beispiel:
 	 * @code
@@ -36,7 +85,7 @@
       			7336 =>	array(
       				c_Property_eFHZ_Type		    		=> c_Type_eFHZ_FHT80b,
       				c_Property_eFHZ_Name		    		=> 'eFHT80b_Buero',
-      				c_Property_eFHZ_Beschreibung		=> 'Büro',
+      				c_Property_eFHZ_Description		=> 'Büro',
       				),
 			   );
 			}
@@ -47,16 +96,6 @@
 
 	function IPSenhancedFHZ_GetFHZConfiguration() {
 		return array(
-			7336 =>	array(
-				c_Property_eFHZ_Type		    		=> c_Type_eFHZ_FHT80b,
-				c_Property_eFHZ_Name		    		=> 'eFHT80b_Buero',
-				c_Property_eFHZ_Beschreibung		=> 'Büro',
-				),
-			7366 =>	array(
-				c_Property_eFHZ_Type		    		=> c_Type_eFHZ_FHT80b,
-				c_Property_eFHZ_Name		    		=> 'eFHT80b_Badezimmer',
-				c_Property_eFHZ_Beschreibung		=> 'Badezimmer',
-				),
 	   );
 	}
 
