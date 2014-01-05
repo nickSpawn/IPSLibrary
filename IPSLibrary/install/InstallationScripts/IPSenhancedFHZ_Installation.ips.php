@@ -59,8 +59,8 @@
 	function RenameVariable($Name, $ParentId, $lang) {
 		$VariableId = @IPS_GetObjectIDByIdent(Get_IdentByName($Name), $ParentId);
 		if ($VariableId) {
-			if (IPS_GetName($VariableId)!=$lang[$Name]) {
-				IPS_SetName($VariableId, $lang[$Name]);
+			if (IPS_GetName($VariableId)!=$lang['c_control_eFHZ_'.$Name]) {
+				IPS_SetName($VariableId, $lang['c_control_eFHZ_'.$Name]);
 			}		
 			return $VariableId;
 		} else {
@@ -80,10 +80,10 @@
 	}
 
 	$moduleManager->VersionHandler()->CheckModuleVersion('IPS','2.50');
-	$moduleManager->VersionHandler()->CheckModuleVersion('IPSModuleManager','2.50.2');
-	$moduleManager->VersionHandler()->CheckModuleVersion('IPSLogger','2.50.2');
-	$moduleManager->VersionHandler()->CheckModuleVersion('IPSComponent','2.50.4');
-	$moduleManager->VersionHandler()->CheckModuleVersion('IPSMessageHandler','2.50.1');
+	$moduleManager->VersionHandler()->CheckModuleVersion('IPSModuleManager','2.50');
+	$moduleManager->VersionHandler()->CheckModuleVersion('IPSLogger','2.50');
+	$moduleManager->VersionHandler()->CheckModuleVersion('IPSComponent','2.50');
+	$moduleManager->VersionHandler()->CheckModuleVersion('IPSMessageHandler','2.50');
 
 	IPSUtils_Include ("IPSInstaller.inc.php",         			  "IPSLibrary::install::IPSInstaller");
 	IPSUtils_Include ("IPSenhancedFHZ.inc.php",                "IPSLibrary::app::hardware::IPSenhancedFHZ");
@@ -115,14 +115,12 @@
 	// ----------------------------------------------------------------------------------------------------------------------------
 	// Add IPSenhancedFHZ Receiving Buffer
 	// ----------------------------------------------------------------------------------------------------------------------------
-	
    $InstanceId = CreateRegisterVariable('IPSenhancedFHZ_Buffer', $CategoryIdApp, $scriptIdRegVarScript, $ftdi_Instance, 0); 
 	$VariableId = CreateVariable('Debug',  3 /*String*/,   $InstanceId,   1, '', '', '', '');
    
 	// ----------------------------------------------------------------------------------------------------------------------------
 	// Add IPSenhancedFHZ Devices
 	// ----------------------------------------------------------------------------------------------------------------------------
-	
 	$IPSenhancedFHZonfig = IPSenhancedFHZ_GetFHZConfiguration();
 	foreach ($IPSenhancedFHZonfig as $deviceHousecode=>$deviceData) {
 		$deviceType = $deviceData[c_Property_eFHZ_Type];
@@ -131,29 +129,28 @@
 
 		switch ($deviceType) {
 			case c_Type_eFHZ_FHT80b:
-				$deviceId   = CreateDummyInstance($deviceName, $CategoryIdData,0);
-				$VariableId = CreateVariable(c_control_eFHZ_actual_temperature_responce,  2 /*Float*/,   $deviceId,   1, '~Temperature.FHT', '', 5.5,   'Temperature');
-				$VariableId = CreateVariable(c_control_eFHZ_position,                     2 /*Float*/,   $deviceId,   2, '~Valve.F',         '', 0.0,   'Gauge');
-				$VariableId = CreateVariable(c_control_eFHZ_battery,                      0 /*Boolean*/, $deviceId,   3, '~Battery',         '', false, 'Battery');
-				$VariableId = CreateVariable(c_control_eFHZ_windowopen,                   0 /*Boolean*/, $deviceId,   4, '~Window',          '', false, 'Window');
-				$VariableId = CreateVariable(c_control_eFHZ_target_temperature_request,   2 /*Float*/,   $deviceId,   5, '~Temperature.FHT', '', 5.5,   '');
-				$VariableId = CreateVariable(c_control_eFHZ_target_temperature_responce,  2 /*Float*/,   $deviceId,   6, '~Temperature.FHT', '', 5.5,   'Temperature');
-				$VariableId = CreateVariable(c_control_eFHZ_mode_request,                 1 /*Integer*/, $deviceId,   7, '~Mode.FHT',        '', 0,     '');
-				$VariableId = CreateVariable(c_control_eFHZ_mode_responce,                1 /*Integer*/, $deviceId,   8, '~Mode.FHT',        '', 0,     'ArrowRight');
-				$VariableId = CreateVariable(c_control_eFHZ_suntemp_request,              2 /*Float*/,   $deviceId,   9, '~Temperature.FHT', '', 5.5,   '');
-				$VariableId = CreateVariable(c_control_eFHZ_suntemp_responce,             2 /*Float*/,   $deviceId,  10, '~Temperature.FHT', '', 5.5,   'Temperature');
-				$VariableId = CreateVariable(c_control_eFHZ_lunatemp_request,             2 /*Float*/,   $deviceId,  11, '~Temperature.FHT', '', 5.5,   '');
-				$VariableId = CreateVariable(c_control_eFHZ_lunatemp_responce,            2 /*Float*/,   $deviceId,  12, '~Temperature.FHT', '', 5.5,   'Temperature');
-				$VariableId = CreateVariable(c_control_eFHZ_windowtemp_request,           2 /*Float*/,   $deviceId,  13, '~Temperature.FHT', '', 5.5,   '');
-				$VariableId = CreateVariable(c_control_eFHZ_windowtemp_responce,          2 /*Float*/,   $deviceId,  14, '~Temperature.FHT', '', 5.5,   'Temperature');
-				$VariableId = CreateVariable(c_control_eFHZ_partytime_request,            3 /*String*/,  $deviceId,  15, '~String',          '', '',    'Clock');
-				$VariableId = CreateVariable(c_control_eFHZ_partytime_responce,           3 /*String*/,  $deviceId,  16, '~String',          '', '',    'Clock');
-				$VariableId = CreateVariable(c_control_eFHZ_weekprogram_request,          3 /*String*/,  $deviceId,  17, '~String',          '', '',    'Calendar');
-				$VariableId = CreateVariable(c_control_eFHZ_weekprogram_responce,         3 /*String*/,  $deviceId,  18, '~String',          '', '',    'Calendar');
-				$VariableId = CreateVariable(c_control_eFHZ_autoinit,                     0 /*Boolean*/, $deviceId,  19, '~Switch',          '', false, 'Information');
-				$VariableId = CreateVariable(c_control_eFHZ_drivecontrol,                 1 /*Integer*/, $deviceId,  20, 'eFHZDriveControl', '', 0,     'Repeat');
-				$VariableId = CreateVariable(c_control_eFHZ_drivecontrol_timer,           1 /*Integer*/, $deviceId,  21, '',                 '', 0,     '');
-
+				$deviceId   = CreateDummyInstance($deviceName, $categoryIdDevices,0);
+				$VariableId = CreateVariable(c_control_eFHZ_actual_temperature_responce,  2 /*Float*/,   $deviceId,   1, '~Temperature.FHT', null, 5.5,   'Temperature');
+				$VariableId = CreateVariable(c_control_eFHZ_position,                     2 /*Float*/,   $deviceId,   2, '~Valve.F',         null, 0.0,   'Gauge');
+				$VariableId = CreateVariable(c_control_eFHZ_battery,                      0 /*Boolean*/, $deviceId,   3, '~Battery',         null, false, 'Battery');
+				$VariableId = CreateVariable(c_control_eFHZ_windowopen,                   0 /*Boolean*/, $deviceId,   4, '~Window',          null, false, 'Window');
+				$VariableId = CreateVariable(c_control_eFHZ_target_temperature_request,   2 /*Float*/,   $deviceId,   5, '~Temperature.FHT', null, 5.5,   '');
+				$VariableId = CreateVariable(c_control_eFHZ_target_temperature_responce,  2 /*Float*/,   $deviceId,   6, '~Temperature.FHT', null, 5.5,   'Temperature');
+				$VariableId = CreateVariable(c_control_eFHZ_mode_request,                 1 /*Integer*/, $deviceId,   7, '~Mode.FHT',        null, 0,     '');
+				$VariableId = CreateVariable(c_control_eFHZ_mode_responce,                1 /*Integer*/, $deviceId,   8, '~Mode.FHT',        null, 0,     'ArrowRight');
+				$VariableId = CreateVariable(c_control_eFHZ_suntemp_request,              2 /*Float*/,   $deviceId,   9, '~Temperature.FHT', null, 5.5,   '');
+				$VariableId = CreateVariable(c_control_eFHZ_suntemp_responce,             2 /*Float*/,   $deviceId,  10, '~Temperature.FHT', null, 5.5,   'Temperature');
+				$VariableId = CreateVariable(c_control_eFHZ_lunatemp_request,             2 /*Float*/,   $deviceId,  11, '~Temperature.FHT', null, 5.5,   '');
+				$VariableId = CreateVariable(c_control_eFHZ_lunatemp_responce,            2 /*Float*/,   $deviceId,  12, '~Temperature.FHT', null, 5.5,   'Temperature');
+				$VariableId = CreateVariable(c_control_eFHZ_windowtemp_request,           2 /*Float*/,   $deviceId,  13, '~Temperature.FHT', null, 5.5,   '');
+				$VariableId = CreateVariable(c_control_eFHZ_windowtemp_responce,          2 /*Float*/,   $deviceId,  14, '~Temperature.FHT', null, 5.5,   'Temperature');
+				$VariableId = CreateVariable(c_control_eFHZ_partytime_request,            3 /*String*/,  $deviceId,  15, '~String',          null, '',    'Clock');
+				$VariableId = CreateVariable(c_control_eFHZ_partytime_responce,           3 /*String*/,  $deviceId,  16, '~String',          null, '',    'Clock');
+				$VariableId = CreateVariable(c_control_eFHZ_weekprogram_request,          3 /*String*/,  $deviceId,  17, '~String',          null, '',    'Calendar');
+				$VariableId = CreateVariable(c_control_eFHZ_weekprogram_responce,         3 /*String*/,  $deviceId,  18, '~String',          null, '',    'Calendar');
+				$VariableId = CreateVariable(c_control_eFHZ_autoinit,                     0 /*Boolean*/, $deviceId,  19, '~Switch',          null, false, 'Information');
+				$VariableId = CreateVariable(c_control_eFHZ_drivecontrol,                 1 /*Integer*/, $deviceId,  20, 'eFHZDriveControl', null, 0,     'Repeat');
+				$VariableId = CreateVariable(c_control_eFHZ_drivecontrol_timer,           1 /*Integer*/, $deviceId,  21, '',                 null, 0,     '');
 				$VariableId = RenameVariable(c_control_eFHZ_actual_temperature_responce, $deviceId, $lang);
 				$VariableId = RenameVariable(c_control_eFHZ_position,                    $deviceId, $lang);
 				$VariableId = RenameVariable(c_control_eFHZ_battery,                     $deviceId, $lang);
@@ -175,11 +172,12 @@
 				$VariableId = RenameVariable(c_control_eFHZ_autoinit,                    $deviceId, $lang);
 				$VariableId = RenameVariable(c_control_eFHZ_drivecontrol,                $deviceId, $lang);
 				$VariableId = RenameVariable(c_control_eFHZ_drivecontrol_timer,          $deviceId, $lang);
-
-				break;
+        		break;
+        		
 			case c_Type_eFHZ_FS20Switch:
 				trigger_error('IPSenhancedFHZ DeviceType '.$deviceType.' for '.$deviceName.' is not supported for now.');
 				break;
+				
 			default:
 				trigger_error('Unknown DeviceType '.$deviceType.' found for IPSenhancedFHZ-'.$deviceName);
 		}
