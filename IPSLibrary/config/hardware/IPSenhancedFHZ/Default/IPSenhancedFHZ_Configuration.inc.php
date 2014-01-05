@@ -86,6 +86,7 @@
       				c_Property_eFHZ_Type		    		=> c_Type_eFHZ_FHT80b,
       				c_Property_eFHZ_Name		    		=> 'eFHT80b_Buero',
       				c_Property_eFHZ_Description		=> 'Büro',
+      				c_Property_eFHZ_Leap					=> false,
       				),
 			   );
 			}
