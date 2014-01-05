@@ -16,18 +16,16 @@
 	 * along with the IPSLibrary. If not, see http://www.gnu.org/licenses/gpl.txt.
 	 */
 
-	/**@ingroup ipsenhancedfhz
-	 * @{
-	 *
+   /**
+    * @class IPSenhancedFHZ
+    *
+    * Definiert das IPSenhancedFHZ Object, das den Versand und Empfang über den IPSenhancedFHZ-Puffer verarbeitet.
+    *
 	 * @file          IPSenhancedFHZ_Device.class.php
-	 * @author        Günter Strassnigg
-	 * @version
-	 *  Version 1.00.1, 31.03.2013<br/>
-	 *
-	 * Definition der Konstanten IPSenhancedFHZ
-	 *
-	 */
-
+    * @author Günter Strassnigg
+    * @version
+	 *  Version 1.0.1, 04.01.2014<br/>
+    */
 
 	class IPSenhancedFHZ {
 
@@ -40,7 +38,7 @@
 		 * @private
 		 */
 		private $eFHZ_InstanceId;	
-		private $ConnectionReady=false;
+		public $ConnectionReady=false;
 		private $FTDIInstanceId;		
 		private $config;		
 		private $Housecode;
@@ -79,7 +77,25 @@
 		 */
 
 		// ----------------------------------------------------------------------------------------------------------------------------
-		private function GetIdentValue($variableIdent,$deviceID) {
+		protected function isBit($bitField,$n) {
+			return ((($bitField & (0x01 << ($n-1))))>0);
+		}
+		
+		// ----------------------------------------------------------------------------------------------------------------------------
+		protected function setBit(&$bitField,$n) {
+			if(($n < 0) or ($n > 32)) return false;
+			$bitField |= (0x01 << ($n-1));
+			return true;
+		}
+		
+		// ----------------------------------------------------------------------------------------------------------------------------
+		protected function clearBit(&$bitField,$n) {
+			$bitField &= ~(0x01 << ($n-1));
+			return true;
+		}
+
+		// ----------------------------------------------------------------------------------------------------------------------------
+		protected function GetIdentValue($variableIdent,$deviceID) {
 			$variableId = IPS_GetObjectIDByIdent($variableIdent, $deviceID);
 			if ($variableId === false) {
 				throw new Exception('Variable '.$variableIdent.' could NOT be found for DeviceId='.$this->deviceId);
@@ -88,7 +104,7 @@
 		}
 
 		// ----------------------------------------------------------------------------------------------------------------------------
-		private function SetIdentValue($variableIdent, $value,$deviceID) {
+		protected function SetIdentValue($variableIdent, $value,$deviceID) {
 			$variableId = IPS_GetObjectIDByIdent($variableIdent, $deviceID);
 			if ($variableId === false) {
 				throw new Exception('Variable '.$variableIdent.' could NOT be found for DeviceId='.$this->deviceId);
@@ -96,6 +112,50 @@
 			SetValue($variableId, $value);
 		}
 		
+		// ----------------------------------------------------------------------------------------------------------------------------
+		protected function eFHZLogValue($variableIdent,$Value,$deviceID,$lang,$Key=false) {
+			$name=IPS_GetName($deviceID);
+			if ($Key===false)   {
+				$logmessage=str_replace("%Device%",$name,$lang["c_LogMess_eFHZ_".$variableIdent]);
+				$logmessage=str_replace("%Value%",$Value,$logmessage);
+			} else {
+				$logmessage=str_replace("%Device%",$name,$lang["c_LogMess_eFHZ_".$variableIdent][$Value]);
+			}
+			return $logmessage;
+		}
+
+		// ----------------------------------------------------------------------------------------------------------------------------
+		protected function eFHZLogOtherValue($Identifier,$deviceID,$lang) {
+			$name=IPS_GetName($deviceID);
+			$logmessage=str_replace("%Device%",$name,$lang[$Identifier]);
+			return $logmessage;
+		}
+		// ----------------------------------------------------------------------------------------------------------------------------
+		protected function GetModeBasedOnWeeklyProgram ($weekprogram,$timestamp) {
+			if (!is_array($wp=unserialize($weekprogram))) return 0;
+			$Day=(int)date("w",$timestamp);$Day=($Day==0) ? 6 : $Day-1;
+			$Time=(((float)(date("H",$timestamp)))+((float)(date("i",$timestamp))/60))*6;
+			$x1on=$Day*4;$x1off=$x1on+1;$x2on=$x1off+1;$x2off=$x2on+1;$Value=2;
+			if ($wp[$x1on]!=144 && $wp[$x1off]!=144 && $wp[$x1on]!=$wp[$x1off]) {
+				if (($wp[$x1on]<$wp[$x1off])&&($Time>=$wp[$x1on] && $Time<$wp[$x1off])) return 3;
+				if (($wp[$x1on]>$wp[$x1off])&&($Time>=$wp[$x1on] || $Time<$wp[$x1off])) return 3;
+			}
+			elseif ($wp[$x1on]==144 && $wp[$x1off]==144) $Value=1;
+			if ($wp[$x2on]!=144 && $wp[$x2off]!=144 && $wp[$x2on]!=$wp[$x2off]) {
+				if (($wp[$x2on]<$wp[$x2off])&&($Time>=$wp[$x2on] && $Time<$wp[$x2off])) return 3;
+				if (($wp[$x2on]>$wp[$x2off])&&($Time>=$wp[$x2on] || $Time<$wp[$x2off])) return 3;
+			}
+			return $Value;
+		}
+
+		// ----------------------------------------------------------------------------------------------------------------------------
+		protected function GetTemperatureBasedOnWeeklyProgram($weekprogram,$timestamp,$deviceID) {
+			$Value=$this->GetModeBasedOnWeeklyProgram($weekprogram,$timestamp);
+			if ($Value==3) return ($this->GetIdentValue(c_control_eFHZ_suntemp_responce,$deviceID));
+			if ($Value==2) return ($this->GetIdentValue(c_control_eFHZ_lunatemp_responce,$deviceID));
+			return 17;
+		}
+
 		// ----------------------------------------------------------------------------------------------------------------------------
 		private function CheckConnection() {
 			foreach(IPS_GetInstanceList() as $id) {
@@ -178,32 +238,6 @@
 			return $timestamp;
 		}
 	   
-		// ----------------------------------------------------------------------------------------------------------------------------
-		public function GetModeBasedOnWeeklyProgram ($weekprogram,$timestamp) {
-			if (!is_array($wp=unserialize($weekprogram))) return 0;
-			$Day=(int)date("w",$timestamp);$Day=($Day==0) ? 6 : $Day-1;
-			$Time=(((float)(date("H",$timestamp)))+((float)(date("i",$timestamp))/60))*6;
-			$x1on=$Day*4;$x1off=$x1on+1;$x2on=$x1off+1;$x2off=$x2on+1;$Value=2;
-			if ($wp[$x1on]!=144 && $wp[$x1off]!=144 && $wp[$x1on]!=$wp[$x1off]) {
-				if (($wp[$x1on]<$wp[$x1off])&&($Time>=$wp[$x1on] && $Time<$wp[$x1off])) return 3;
-				if (($wp[$x1on]>$wp[$x1off])&&($Time>=$wp[$x1on] || $Time<$wp[$x1off])) return 3;
-			}
-			elseif ($wp[$x1on]==144 && $wp[$x1off]==144) $Value=1;
-			if ($wp[$x2on]!=144 && $wp[$x2off]!=144 && $wp[$x2on]!=$wp[$x2off]) {
-				if (($wp[$x2on]<$wp[$x2off])&&($Time>=$wp[$x2on] && $Time<$wp[$x2off])) return 3;
-				if (($wp[$x2on]>$wp[$x2off])&&($Time>=$wp[$x2on] || $Time<$wp[$x2off])) return 3;
-			}
-			return $Value;
-		}
-
-		// ----------------------------------------------------------------------------------------------------------------------------
-		public function GetTemperatureBasedOnWeeklyProgram($weekprogram,$timestamp,$deviceID) {
-			$Value=GetModeBasedOnWeeklyProgram($weekprogram,$timestamp);
-			if ($Value==3) return ($this->GetIdentValue(c_control_eFHZ_suntemp_responce,$deviceID));
-			if ($Value==2) return ($this->GetIdentValue(c_control_eFHZ_lunatemp_responce,$deviceID));
-			return 17;
-		}
-
 		/**
 		 *
 		 * @FHZ Single-Methoden der IPSenhancedFHZ Klasse
@@ -246,10 +280,16 @@
 			if ($timestamp==0) $timestamp=time();
 			$timestamp=$this->CorrectLeapTime($timestamp,$leap);
 			if ($this->ConnectionReady) {
-				$dj=(int)date("y",$timestamp);$dm=(int)date("m",$timestamp);$dd=(int)date("d",$timestamp);
-				$th=(int)date("H",$timestamp);$tm=(int)date("i",$timestamp);
-				$str=array(4=>0x02,5=>0x01,6=>0x61,7=>$dj,8=>$dm,9=>$dd,10=>$th,11=>$tm);
+	         $this->S2Buffer=array();
+	         $this->S2Buffer[0x60]=(int)date("y",$timestamp);
+	         $this->S2Buffer[0x61]=(int)date("m",$timestamp);
+	         $this->S2Buffer[0x62]=(int)date("d",$timestamp);
+	         $this->S2Buffer[0x63]=(int)date("H",$timestamp);
+	         $this->S2Buffer[0x64]=(int)date("i",$timestamp);
+				$str=$this->BuildProtocolSendString(array(4=>2,5=>1,6=>0x83),$this->S2Buffer);
+				$str=$this->SetProtocolHouseCode($str);
 				$str=$this->ProtocolBlockCheck($str);$str[2]=4;
+	         $this->S2Buffer=array();
 				return $this->SendProtocolString($str);
 			}
 			else return false;
@@ -272,6 +312,54 @@
 			}
 			else return false;
 		}
+
+		// ----------------------------------------------------------------------------------------------------------------------------
+	   public function sFHT_SetWeekProgram($Day,$Von1=false,$Bis1=false,$Von2=false,$Bis2=false) {
+	      if ($this->ConnectionReady) {
+	         $this->S2Buffer=array();
+	         if (($Day=(int)$Day)<7) {
+	            $this->S2Buffer[0x65]=(($Day-=1)<0) ? 64 : 1<<$Day;
+	            $reg=20+(($Day<0) ? 6 : $Day)*4;
+	            if ($Von1===false||$Bis1===false) {$Von1=false;$Bis1=false;$Von2=false;$Bis2=false;}
+	            else {
+	               if ((!is_string($Von1))||(($Von1=strtotime($Von1,0))===false)) {return false;}
+	               if ((!is_string($Bis1))||(($Bis1=strtotime($Bis1,0))===false)) {return false;}
+	            }
+	            if ($Von2===false||$Bis2===false) {$Von2=false;$Bis2=false;}
+	            else {
+	               if ((!is_string($Von2))||(($Von2=strtotime($Von2,0))===false)) {return false;}
+	               if ((!is_string($Bis2))||(($Bis2=strtotime($Bis2,0))===false)) {return false;}
+	            }
+					$wp=$this->GetIdentValue(c_control_eFHZ_weekprogram_request,$this->deviceId);
+					if (!is_array($wp=unserialize($wp))) {$wp=array_fill(0,28,144);}
+	     
+		         if ($Von1!==false) $this->S2Buffer[$reg]=(((float)(date("H",$Von1)))+((float)(date("i",$Von1))/60))*6;
+	            else $this->S2Buffer[$reg]=144;
+	            $wp[$reg-20]=$this->S2Buffer[$reg];
+	     
+		         if ($Bis1!==false) $this->S2Buffer[$reg+1]=(((float)(date("H",$Bis1)))+((float)(date("i",$Bis1))/60))*6;
+	            else $this->S2Buffer[$reg+1]=144;
+		         $wp[$reg-19]=$this->S2Buffer[$reg+1];
+
+	            if ($Von2!==false) $this->S2Buffer[$reg+2]=(((float)(date("H",$Von2)))+((float)(date("i",$Von2))/60))*6;
+	            else $this->S2Buffer[$reg+2]=144;
+		         $wp[$reg-18]=$this->S2Buffer[$reg+2];
+
+	            if ($Bis2!==false) $this->S2Buffer[$reg+3]=(((float)(date("H",$Bis2)))+((float)(date("i",$Bis2))/60))*6;
+	            else $this->S2Buffer[$reg+3]=144;
+	            $wp[$reg-17]=$this->S2Buffer[$reg+3];
+	            
+					$str=$this->BuildProtocolSendString(array(4=>2,5=>1,6=>0x83),$this->S2Buffer);
+					$str=$this->SetProtocolHouseCode($str);
+					$str=$this->ProtocolBlockCheck($str);$str[2]=4;
+		         $this->S2Buffer=array();
+		         $this->SetIdentValue(c_control_eFHZ_weekprogram_request, serialize($wp),$this->deviceId);
+					return $this->SendProtocolString($str);
+	         }
+	         else return false;
+	      }
+	      else return false;
+	   }
 
 		/**
 		 *
@@ -385,26 +473,21 @@
 				ksort($this->S1Buffer);
 				while (list($key,$value)=each($this->S1Buffer)) {
 					if ($key==0x3e) {
-						//if (parent::xipsvarget(self::$FHT_Settings['Settings']['TargetIPSModeVar'],'String')!=$value) {
-						//   self::xefhtvarset(0,'');
-						
-						//}
-						//parent::xipsvarset(self::$FHT_Settings['Settings']['TargetIPSModeVar'],'Integer',$value);
 						$this->SetIdentValue(c_control_eFHZ_mode_request,$value,$this->deviceId);
 					}
-					if ($key==0x3f) {
+					elseif ($key==0x3f) {
 						$ti=date("H:i:s d.m.Y",($to=mktime(($h=round(($this->S1Buffer[0x3f]/6),-1)),($this->S1Buffer[0x3f]/6-$h)*60,0))+($this->S1Buffer[0x40]!=(int)date("d",$to) ? 1 : 0)*86400);
 						$this->SetIdentValue(c_control_eFHZ_partytime_request,$ti,$this->deviceId);
 					}
-					if ($key==0x41) {
+					elseif ($key==0x41) {
 						$this->SetIdentValue(c_control_eFHZ_target_temperature_request,$value/2,$this->deviceId);
 						if (c_eFHZ_debug_logging) {
 							IPSLogger_Dbg(__file__, c_PropertyName_eFHZ_target_temperature_request);
 						}
 					}
-					if ($key==0x82) $this->SetIdentValue(c_control_eFHZ_suntemp_request,$value/2,$this->deviceId);
-					if ($key==0x84) $this->SetIdentValue(c_control_eFHZ_lunatemp_request,$value/2,$this->deviceId);
-					if ($key==0x8a) $this->SetIdentValue(c_control_eFHZ_windowtemp_request,$value/2,$this->deviceId);
+					elseif ($key==0x82) $this->SetIdentValue(c_control_eFHZ_suntemp_request,$value/2,$this->deviceId);
+					elseif ($key==0x84) $this->SetIdentValue(c_control_eFHZ_lunatemp_request,$value/2,$this->deviceId);
+					elseif ($key==0x8a) $this->SetIdentValue(c_control_eFHZ_windowtemp_request,$value/2,$this->deviceId);
 				}
 				$str=$this->BuildProtocolSendString(array(4=>0x02,5=>0x01,6=>0x83),$this->S1Buffer);
 				$str=$this->SetProtocolHouseCode($str);$str=$this->ProtocolBlockCheck($str);$str[2]=4;
@@ -412,6 +495,46 @@
 				return ($this->SendProtocolString($str));
 			}
 			else return false;
+		}
+
+      /**
+		 *
+		 * @FHT Variablen-Methoden der IPSenhancedFHZ Klasse
+		 *
+		 */
+
+		// ----------------------------------------------------------------------------------------------------------------------------
+		public function vFHT_DecodeWeekProgram($Day,$request=false) {
+			$arr=array();
+			$e_sign="--:--";
+			if ($request) {
+				$wp=$this->GetIdentValue(c_control_eFHZ_weekprogram_request,$this->deviceId);
+			}
+			else {
+				$wp=$this->GetIdentValue(c_control_eFHZ_weekprogram_responce,$this->deviceId);
+			}
+			if (!is_array($wp=unserialize($wp))) {return false;}
+			$cntr=($Day>=7) ? 6 : 0;
+			for($i=0;$i<=$cntr;$i++) {
+				if ($cntr==0) {
+					$idx=($Day==0) ? 6 : ($Day-1);
+				}
+				else {
+					$idx=($i==6) ? 0 : ($i+1);
+				}
+				for($j=0;$j<=3;$j++) {
+					$v=$wp[($idx*4)+$j];$idn=($idx==6) ? 0 : ($idx+1);
+					if ($v==144) {
+						$arr[$idn][$j]=$e_sign;
+					}
+					else {
+						$x=$wp[($idx*4)+$j]/6;$y=round(($x-intval($x))*60,0);
+						$arr[$idn][$j]=sprintf("%02d:%02d", intval($x), $y);
+					}
+				}
+			}
+			ksort($arr);
+			return $arr;
 		}
 
 	}
