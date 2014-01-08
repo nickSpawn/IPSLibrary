@@ -2,11 +2,12 @@
 ==========
 
 ## PROJECT
-IPSenhancedFHZ (ehem. eFHT/eFHZ-Bricks -> IP-Symcon V1) 
-Realisierung für IPSLibrary (Founder: brownson)
+1. IPSenhancedFHZ        HARDWARE
+2. IPSComponentHeating   CORE
+3. IPSAccessories        MODULE
+4. IPSSchaltuhr          MODULE
 
 ## VERSION
-1.0.1
 
 ## ABOUT
 IPSLibrary is Script Library für IP-Symcon
