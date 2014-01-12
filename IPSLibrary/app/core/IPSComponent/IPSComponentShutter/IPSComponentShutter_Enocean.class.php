@@ -1,0 +1,120 @@
+<?
+	/**@addtogroup ipscomponent
+	 * @{
+	 *
+ 	 *
+	 * @file          IPSComponentShutter_Enocean.class.php
+	 * @author        Andreas Brauneis
+	 *
+	 *
+	 */
+
+   /**
+    * @class IPSComponentShutter_Enocean
+    *
+    * Definiert ein IPSComponentShutter_Enocean Object, das ein IPSComponentShutter Object für Enocean implementiert.
+    *
+    * @author Andreas Brauneis
+    * @version
+    * Version 2.50.1, 31.01.2012<br/>
+    */
+
+	IPSUtils_Include ('IPSComponentShutter.class.php', 'IPSLibrary::app::core::IPSComponent::IPSComponentShutter');
+
+	class IPSComponentShutter_Enocean extends IPSComponentShutter {
+
+		private $instanceId;
+		private $isRunningId;
+
+		/**
+		 * @public
+		 *
+		 * Initialisierung eines IPSComponentShutter_Enocean Objektes
+		 *
+		 * @param integer $instanceId InstanceId des Enocean Devices
+		 */
+		public function __construct($instanceId) {
+			$this->instanceId = IPSUtil_ObjectIDByPath($instanceId);
+			$this->isRunningId  = @IPS_GetObjectIDByIdent('runningMode', $this->instanceId);
+			if($this->isRunningId===false) {
+				$this->isRunningId = IPS_CreateVariable(1 /*Integer*/);
+				IPS_SetParent($this->isRunningId, $this->instanceId);
+				IPS_SetName($this->isRunningId, 'RunningMode');
+				IPS_SetIdent($this->isRunningId, 'runningMode');
+				IPS_SetInfo($this->isRunningId, "This Variable was created by Script IPSComponentShutter_Enocean");
+			}
+		}
+
+		/**
+		 * @public
+		 *
+		 * Funktion liefert String IPSComponent Constructor String.
+		 * String kann dazu benützt werden, das Object mit der IPSComponent::CreateObjectByParams
+		 * wieder neu zu erzeugen.
+		 *
+		 * @return string Parameter String des IPSComponent Object
+		 */
+		public function GetComponentParams() {
+			return get_class($this).','.$this->instanceId;
+		}
+
+		/**
+		 * @public
+		 *
+		 * Function um Events zu behandeln, diese Funktion wird vom IPSMessageHandler aufgerufen, um ein aufgetretenes Event
+		 * an das entsprechende Module zu leiten.
+		 *
+		 * @param integer $variable ID der auslösenden Variable
+		 * @param string $value Wert der Variable
+		 * @param IPSModuleShutter $module Module Object an das das aufgetretene Event weitergeleitet werden soll
+		 */
+		public function HandleEvent($variable, $value, IPSModuleShutter $module){
+			$name = IPS_GetName($variable);
+			throw new IPSComponentException('Event Handling NOT supported for Variable '.$variable.'('.$name.')');
+		}
+
+		/**
+		 * @public
+		 *
+		 * Hinauffahren der Beschattung
+		 */
+		public function MoveUp(){
+			if(!GetValue($this->isRunningId)) {
+				ENO_SwitchMode($this->instanceId, true);
+				SetValue($this->isRunningId, 1);
+			}
+		}
+
+		/**
+		 * @public
+		 *
+		 * Hinunterfahren der Beschattung
+		 */
+		public function MoveDown(){
+			if(!GetValue($this->isRunningId)) {
+				ENO_SwitchMode($this->instanceId, false);
+				SetValue($this->isRunningId, 2);
+			}
+		}
+
+		/**
+		 * @public
+		 *
+		 * Stop
+		 */
+		public function Stop() {
+			$running = GetValue($this->isRunningId);
+			if($running != 0) {
+				if ($running == 1) {
+					ENO_SwitchMode($this->instanceId, true);
+				} else if ($running == 2) {
+					ENO_SwitchMode($this->instanceId, false);
+				} else {
+				}
+				SetValue($this->isRunningId, 0);
+			}
+		}
+	}
+
+	/** @}*/
+?>
