@@ -22,7 +22,7 @@
 	 * @file          IPSAccessories_ActionScript.ips.php
 	 * @author        Günter Strassnigg
 	 * @version
-	 *   Version 1.0.0, 05.01.2014<br/>
+	 *   Version 0.1.1, 05.01.2014<br/>
 	 *
 	 * IPSAccessories ActionScript 
 	 */
