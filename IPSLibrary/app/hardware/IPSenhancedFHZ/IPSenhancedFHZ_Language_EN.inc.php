@@ -34,7 +34,6 @@
 	function IPSenhancedFHZ_GetLanguages() {
 
 		$lang=array();		
-		$lang['c_control_eFHZ_autoinit']=							"auto init";
 		$lang['c_control_eFHZ_battery']=								"battery state";
 		$lang['c_control_eFHZ_windowopen']=							"window opened";
 		$lang['c_control_eFHZ_position']=							"position";

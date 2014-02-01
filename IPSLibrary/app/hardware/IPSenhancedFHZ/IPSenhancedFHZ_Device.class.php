@@ -134,7 +134,7 @@
 			return $logmessage;
 		}
 		// ----------------------------------------------------------------------------------------------------------------------------
-		protected function GetModeBasedOnWeeklyProgram ($weekprogram,$timestamp) {
+		protected function GetModeBasedOnWeeklyProgram($weekprogram,$timestamp) {
 			if (!is_array($wp=unserialize($weekprogram))) return 0;
 			//$Day=(int)date("w",$timestamp);$Day=($Day==0) ? 6 : $Day-1;
 			$Day=(int)date("N",$timestamp)-1;
@@ -443,6 +443,19 @@
 			}
 			else return false;
 		}
+		
+ 		// ----------------------------------------------------------------------------------------------------------------------------
+		public function bFHT_SetTemperatureByWindowMode($mode=false) {
+			if ($this->ConnectionReady) {
+				if ($mode==false) {
+					$weekprogram=$this->GetIdentValue(c_control_eFHZ_weekprogram_responce,$this->deviceId);
+					$targettemperatur=$this->GetTemperatureBasedOnWeeklyProgram($weekprogram,time(),$this->deviceId); 
+				} else {
+					$targettemperatur=$this->vFHT_GetWindTemperature();
+				}
+				$this->bFHT_SetTemperature($targettemperatur);
+			}
+		}
 
 		// ----------------------------------------------------------------------------------------------------------------------------
 		public function bFHT_SetMode($Mode) {
@@ -504,8 +517,39 @@
       /**
 		 *
 		 * @FHT Variablen-Methoden der IPSenhancedFHZ Klasse
-		 *
+		 *                                  
 		 */
+
+
+		// ----------------------------------------------------------------------------------------------------------------------------
+	   public function vFHT_GetActualTemperature() {
+		   return $this->GetIdentValue(c_control_eFHZ_actual_temperature_responce,$this->deviceId);
+	   }  
+
+		// ----------------------------------------------------------------------------------------------------------------------------
+	   public function vFHT_GetTemperature() {
+		   return $this->GetIdentValue(c_control_eFHZ_target_temperature_responce,$this->deviceId);
+	   }  
+
+		// ----------------------------------------------------------------------------------------------------------------------------
+	   public function vFHT_GetSunTemperature() {
+		   return $this->GetIdentValue(c_control_eFHZ_suntemp_responce,$this->deviceId);
+	   }  
+
+		// ----------------------------------------------------------------------------------------------------------------------------
+	   public function vFHT_GetLunaTemperature() {
+		   return $this->GetIdentValue(c_control_eFHZ_lunatemp_responce,$this->deviceId);
+	   }  
+
+		// ----------------------------------------------------------------------------------------------------------------------------
+	   public function vFHT_GetWindTemperature() {
+		   return $this->GetIdentValue(c_control_eFHZ_windowtemp_responce,$this->deviceId);
+	   }  
+
+		// ----------------------------------------------------------------------------------------------------------------------------
+	   public function vFHT_GetMode() {
+		   return $this->GetIdentValue(c_control_eFHZ_mode_responce,$this->deviceId);
+	   }  
 
 		// ----------------------------------------------------------------------------------------------------------------------------
 		public function vFHT_DecodeWeekProgram($Day,$request=false) {
