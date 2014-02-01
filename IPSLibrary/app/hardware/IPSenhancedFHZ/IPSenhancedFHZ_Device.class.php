@@ -24,7 +24,7 @@
 	 * @file          IPSenhancedFHZ_Device.class.php
     * @author Günter Strassnigg
     * @version
-	 *  Version 1.0.1, 04.01.2014<br/>
+	 *  Version 0.1.2, 05.01.2014<br/>
     */
 
 	class IPSenhancedFHZ  {
@@ -136,7 +136,8 @@
 		// ----------------------------------------------------------------------------------------------------------------------------
 		protected function GetModeBasedOnWeeklyProgram ($weekprogram,$timestamp) {
 			if (!is_array($wp=unserialize($weekprogram))) return 0;
-			$Day=(int)date("w",$timestamp);$Day=($Day==0) ? 6 : $Day-1;
+			//$Day=(int)date("w",$timestamp);$Day=($Day==0) ? 6 : $Day-1;
+			$Day=(int)date("N",$timestamp)-1;
 			$Time=(((float)(date("H",$timestamp)))+((float)(date("i",$timestamp))/60))*6;
 			$x1on=$Day*4;$x1off=$x1on+1;$x2on=$x1off+1;$x2off=$x2on+1;$Value=2;
 			if ($wp[$x1on]!=144 && $wp[$x1off]!=144 && $wp[$x1on]!=$wp[$x1off]) {

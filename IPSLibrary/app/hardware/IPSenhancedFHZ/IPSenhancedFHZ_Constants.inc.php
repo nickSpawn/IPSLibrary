@@ -22,7 +22,7 @@
 	 * @file          IPSenhancedFHZ_Constants.inc.php
 	 * @author        Günter Strassnigg
 	 * @version
-	 *  Version 1.0.1, 04.01.2014<br/>
+	 *  Version 0.1.3, 04.01.2014<br/>
 	 *
 	 * Definition der Konstanten IPSenhancedFHZ
 	 *
@@ -62,6 +62,10 @@
 	define ('c_Property_eFHZ_HouseCode',							"Hauscode");
 	define ('c_Property_eFHZ_Address',								"Adresse");
 	define ('c_Property_eFHZ_Leap',									"Schaltjahrberichtigung");
+	define ('c_Property_eFHZ_windowemulate',						"Fenstertemperaturemulierung");
+	define ('c_Property_eFHZ_windowsensors',						"Fenstermelder");
+	//define ('c_Property_eFHZ_timesyncTime',						"Zeitsynchronisation-Zeit");
+	//define ('c_Property_eFHZ_timesyncWeekdays',					"Zeitsynchronisation-Wochentage");
    
 	define ('c_profile_eFHZ_drivecontrol_normal',				"drivecontrol_normal");
 	define ('c_profile_eFHZ_drivecontrol_valvedrive',			"drivecontrol_valvedrive");

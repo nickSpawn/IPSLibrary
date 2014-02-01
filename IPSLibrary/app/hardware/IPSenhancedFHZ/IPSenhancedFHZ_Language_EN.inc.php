@@ -22,7 +22,7 @@
 	 * @file          IPSenhancedFHZ_Language_EN.inc.php
 	 * @author        Günter Strassnigg
 	 * @version
-	 *  Version 1.0.1, 04.01.2014<br/>
+	 *  Version 0.1.2, 04.01.2014<br/>
 	 *
 	 * Definition der Konstanten IPSenhancedFHZ
 	 *
