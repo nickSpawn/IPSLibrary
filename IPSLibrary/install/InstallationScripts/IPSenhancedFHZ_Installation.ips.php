@@ -29,8 +29,7 @@
 	 * @page rquirements_IPSenhancedFHZ Installations Voraussetzungen
 	 * - IPS Kernel >= 2.50
 	 * - IPSModuleManager >= 2.50.2
-	 * - IPSLogger >= 2.50.1
-	 * - IPSMessageHandler >= 2.50.1
+	 * - IPSLogger >= 2.50.2
 	 *
 	 * @page install_IPSenhancedFHZ Installations Schritte
 	 * Folgende Schritte sind zur Installation der IPSenhancedFHZ Ansteuerung nötig:
@@ -41,16 +40,18 @@
 	 * @file          IPSenhancedFHZ_Installation.ips.php
 	 * @author        Günter Strassnigg
 	 * @version
-	 *  Version 1.00.1, 30.03.2013<br/>
+	 *  Version 0.1.2, 05.01.2014<br/>
 	 *
 	 */
 
 
-   function GetFTDIInstance() {
+   function GetFTDIInstance($SearchedID) {
 		foreach(IPS_GetInstanceList() as $id) {
 			$Instance = IPS_GetInstance($id);
 			if ($Instance['ModuleInfo']['ModuleID']=='{C1D478E9-2A3E-4344-BCC4-37C892F58751}') {
-				return $Instance['InstanceID'];
+				if ($Instance['InstanceID']==$SearchedID) {
+					return true;
+				}
 			}
 		}
 		return false;
@@ -68,7 +69,7 @@
 		}
 	}
 
-	if (($ftdi_Instance=GetFTDIInstance())===false) {
+	if (GetFTDIInstance(c_eFHZ_FTDIfhzID)===false) {
 		throw new Exception('FTDI Device could NOT be found! You have to install MANUAL a FHZ Device and a FTDI I/O Instance.', E_USER_ERROR);
 	}
 	
@@ -80,10 +81,8 @@
 	}
 
 	$moduleManager->VersionHandler()->CheckModuleVersion('IPS','2.50');
-	$moduleManager->VersionHandler()->CheckModuleVersion('IPSModuleManager','2.50');
-	$moduleManager->VersionHandler()->CheckModuleVersion('IPSLogger','2.50');
-	$moduleManager->VersionHandler()->CheckModuleVersion('IPSComponent','2.50');
-	$moduleManager->VersionHandler()->CheckModuleVersion('IPSMessageHandler','2.50');
+	$moduleManager->VersionHandler()->CheckModuleVersion('IPSModuleManager','2.50.2');
+	$moduleManager->VersionHandler()->CheckModuleVersion('IPSLogger','2.50.2');
 
 	IPSUtils_Include ("IPSInstaller.inc.php",         			  "IPSLibrary::install::IPSInstaller");
 	IPSUtils_Include ("IPSenhancedFHZ.inc.php",                "IPSLibrary::app::hardware::IPSenhancedFHZ");
@@ -115,7 +114,7 @@
 	// ----------------------------------------------------------------------------------------------------------------------------
 	// Add IPSenhancedFHZ Receiving Buffer
 	// ----------------------------------------------------------------------------------------------------------------------------
-   $InstanceId = CreateRegisterVariable('IPSenhancedFHZ_Buffer', $CategoryIdApp, $scriptIdRegVarScript, $ftdi_Instance, 0); 
+   $InstanceId = CreateRegisterVariable('IPSenhancedFHZ_Buffer', $CategoryIdApp, $scriptIdRegVarScript, c_eFHZ_FTDIfhzID, 0); 
 	$VariableId = CreateVariable('Debug',  3 /*String*/,   $InstanceId,   1, '', '', '', '');
    
 	// ----------------------------------------------------------------------------------------------------------------------------

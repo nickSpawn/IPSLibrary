@@ -22,13 +22,14 @@
 	 * @file          IPSenhancedFHZ_Custom.inc.php
 	 * @author        Günter Strassnigg
 	 * @version
-	 *  Version 1.00.1, 26.03.2013<br/>
+	 *  Version 0.1.0, 04.01.2014<br/>
 	 *
 	 * Callback Methoden für IPSenhancedFHZ
 	 *
-	 *
-
-	 *
+	 */
+	
+	// --> ist derzeit noch nicht implementiert
+	
 	/** @}*/
 	
 ?>

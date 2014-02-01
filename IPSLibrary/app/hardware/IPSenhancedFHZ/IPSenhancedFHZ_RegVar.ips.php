@@ -22,7 +22,7 @@
 	 * @file          IPSenhancedFHZ_RegVar.ips.php
 	 * @author        Günter Strassnigg
 	 * @version
-	 *  Version 1.00.1, 31.03.2013<br/>
+	 *  Version 0.1.0, 31.03.2013<br/>
 	 *
 	 * Verarbeitung der Protokolle im Empfangspuffer IPSenhancedFHZ
 	 *

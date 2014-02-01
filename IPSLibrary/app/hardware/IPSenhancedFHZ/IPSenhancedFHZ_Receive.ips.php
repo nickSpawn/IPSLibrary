@@ -22,7 +22,7 @@
 	 * @file          IPSenhancedFHZ_Receive.ips.php
 	 * @author        Günter Strassnigg
 	 * @version
-	 *  Version 1.0.1, 04.01.2014<br/>
+	 *  Version 0.1.3, 19.01.2014<br/>
 	 *
 	 * Verarbeitung der Protokolle der Register Variabler im Empfangspuffer IPSenhancedFHZ
 	 *
@@ -39,12 +39,12 @@
     * Definiert das IPSenhancedFHZ Object, das den Empfang über den IPSenhancedFHZ-Puffer verarbeitet.
     *
     * @author Günter Strassnigg
-    * @version
-    *   Version 1.0.1, 04.01.2014<br/>
     */
 	class CheckFHZ extends eFHZ_Base {
-		
-		public function __construct($ReceivedString,$deviceID) {
+
+		//private $ActionScriptID=IPSUtil_ObjectIDByPath('Program.IPSLibrary.app.hardware.IPSenhancedFHZ.IPSenhancedFHZ_ActionScript');
+	
+		public function __construct($ReceivedString,$deviceID,$config) {
 			$lang=IPSenhancedFHZ_GetLanguages();
 			$rcv=$ReceivedString;
 			
@@ -65,7 +65,7 @@
 				if ($known_protocol==2313&&$function<9) {
 					$status=ord(substr($rcv,12,1));
 					$drivecontrol_mode=0;
-					if ((($status&0xf)==0x06) || (($status&0xf)==0x00)) {
+					if ((($status&0xf)==0x06) || (($status&0xf)==0x00) || (($status&0xf)==0x0a)) {
 						$this->SetIdentValue(c_control_eFHZ_position,$value/2.55,$deviceID);
 					}
 					else {
@@ -76,6 +76,9 @@
 					}
 					if ($drivecontrol_mode!=$this->GetIdentValue(c_control_eFHZ_drivecontrol,$deviceID)) {
 						$this->SetIdentValue(c_control_eFHZ_drivecontrol,$drivecontrol_mode,$deviceID);
+						if ($drivecontrol_mode==0) {
+							$this->SetIdentValue(c_control_eFHZ_drivecontrol_timer,0,$deviceID);
+						}
 					}
 				}
 				elseif ($function>=0x14 && $function<=0x2f) {
@@ -179,10 +182,24 @@
 				elseif ($function==0x44) {
 					$this->SetIdentValue(c_control_eFHZ_battery,$this->isBit($value,1),$deviceID);
 					if (c_eFHZ_trace_logging) {IPSLogger_Trc(__file__, $this->eFHZLogValue(c_control_eFHZ_battery,$value,$deviceID,$lang,true));}
-					$this->SetIdentValue(c_control_eFHZ_windowopen,$this->isBit($value,6),$deviceID);
-					if (c_eFHZ_trace_logging) {IPSLogger_Trc(__file__, $this->eFHZLogValue(c_control_eFHZ_windowopen,$value,$deviceID,$lang,true));}
+					if ($config[(string)$housecode][c_Property_eFHZ_windowemulate]) {
+						$sensors=$config[(string)$housecode][c_Property_eFHZ_windowsensors];
+						$summarysensors=false;
+						while (list($sensor, $reverse) = each($sensors)) {
+						   if (IPS_VariableExists($sensor)) {
+							   $value=GetValue($sensor);
+								$summarysensors=$summarysensors|($reverse ? !$value : $value);
+							} else {
+							   echo "Sensorvariable not exists!";
+							}
+						}
+						$this->SetIdentValue(c_control_eFHZ_windowopen,$summarysensors,$deviceID);
+					} else {
+						$this->SetIdentValue(c_control_eFHZ_windowopen,$this->isBit($value,6),$deviceID);
+						if (c_eFHZ_trace_logging) {IPSLogger_Trc(__file__, $this->eFHZLogValue(c_control_eFHZ_windowopen,$value,$deviceID,$lang,true));}
+					}
 				}
-				elseif ($function==0x54&&$this->GetIdentValue(c_control_eFHZ_autoinit,$deviceID)) {
+				elseif ($function==0x54&&c_eFHZ_autoinit==true) {
 					/*
 					include_once(IPS_GetKernelDir()."bricks\eFHZ\class.eFHZ.php");
 					eFHZ::Begin();
@@ -248,7 +265,7 @@
 	if (array_key_exists($housecode, $config)) {
 		$device=$config[(string)$housecode][c_Property_eFHZ_Name];
 		$deviceID=@IPSUtil_ObjectIDByPath('Program.IPSLibrary.data.hardware.IPSenhancedFHZ.Devices.'.$device,true);
-		if ($deviceID) {$DoReceive = new CheckFHZ($rcv,$deviceID);}
+		if ($deviceID) {$DoReceive = new CheckFHZ($rcv,$deviceID,$config);}
 	}
 	
 	
