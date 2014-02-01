@@ -55,7 +55,6 @@
 	 *
 	 * @file          IPSShadowing_Installation.ips.php
 	 * @author        Andreas Brauneis
-	 *
 	 * @version
 	 *  Version 2.50.1, 19.03.2012<br/>
 	 *
@@ -484,7 +483,6 @@
 	$Profiles = IPS_GetChildrenIDs($CategoryIdProfilesWeather);
 	if (count($Profiles)==0) {
 		$profileManager->CreateWeather('Standard');
-	} else {
 	}
 	$Profiles = IPS_GetChildrenIDs($CategoryIdProfilesBgnOfDay);
 	if (count($Profiles)==0) {
