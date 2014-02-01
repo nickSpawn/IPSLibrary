@@ -80,16 +80,18 @@
 	 *
 	 * Beispiel:
 	 * @code
-			function IPSenhancedFHZ_GetFHZConfiguration() {
-				return array(
-      			7336 =>	array(
-      				c_Property_eFHZ_Type		    		=> c_Type_eFHZ_FHT80b,
-      				c_Property_eFHZ_Name		    		=> 'eFHT80b_Buero',
-      				c_Property_eFHZ_Description		=> 'Büro',
-      				c_Property_eFHZ_Leap					=> false,
-      				),
-			   );
-			}
+		function IPSenhancedFHZ_GetFHZConfiguration() {
+			return array(
+					7336 =>	array(
+						c_Property_eFHZ_Type		    		=> c_Type_eFHZ_FHT80b,
+						c_Property_eFHZ_Name		    		=> 'eFHT80b_Buero',
+						c_Property_eFHZ_Description		=> 'Büro',
+						c_Property_eFHZ_Leap					=> false,
+						c_Property_eFHZ_windowemulate		=> true,
+						c_Property_eFHZ_windowsensors    => array (41110=>false),
+						),
+		   );
+		}
 	 * @endcocde
 	 *
 	 * @return  Liefert Array mit FHT und FS20 Elementen

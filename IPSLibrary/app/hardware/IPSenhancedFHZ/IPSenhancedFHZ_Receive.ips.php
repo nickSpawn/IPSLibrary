@@ -41,10 +41,9 @@
     * @author Günter Strassnigg
     */
 	class CheckFHZ extends eFHZ_Base {
-
-		//private $ActionScriptID=IPSUtil_ObjectIDByPath('Program.IPSLibrary.app.hardware.IPSenhancedFHZ.IPSenhancedFHZ_ActionScript');
 	
 		public function __construct($ReceivedString,$deviceID,$config) {
+			$ActionScriptID=IPSUtil_ObjectIDByPath('Program.IPSLibrary.app.hardware.IPSenhancedFHZ.IPSenhancedFHZ_ActionScript');
 			$lang=IPSenhancedFHZ_GetLanguages();
 			$rcv=$ReceivedString;
 			
@@ -124,8 +123,7 @@
 						if ($ti[2]=2) {
 							$tn=mktime(0,0,0,$ti[1],$ti[0]);if ($tn<time()) $tn=mktime(0,0,0,$ti[1],$ti[0],date("Y")+1);
 							$this->SetIdentValue(c_control_eFHZ_partytime_responce,date("d.m.Y",$tn),$deviceID);
-						}
-			            elseif ($ti[2]=3) {
+						} elseif ($ti[2]=3) {
 							$t=$ti[0]/6;$h=(int)$t;$m=($t-$h)*60;$to=mktime($h,$m);
 							$tn=$to+($ti[1]!=(int)date("d",$to) ? 1 : 0)*86400;
 							$this->SetIdentValue(c_control_eFHZ_partytime_responce,date("H:i:s d.m.Y",$tn),$deviceID);
@@ -185,10 +183,14 @@
 					if ($config[(string)$housecode][c_Property_eFHZ_windowemulate]) {
 						$sensors=$config[(string)$housecode][c_Property_eFHZ_windowsensors];
 						$summarysensors=false;
+						$oldsensorvalue=$this->GetIdentValue(c_control_eFHZ_windowopen,$deviceID);
 						while (list($sensor, $reverse) = each($sensors)) {
 						   if (IPS_VariableExists($sensor)) {
 							   $value=GetValue($sensor);
 								$summarysensors=$summarysensors|($reverse ? !$value : $value);
+								if ($summarysensors!=$oldsensorvalue) {  
+									IPS_RunScriptEx($ActionScriptID, Array("DEVICEID" => $deviceID,"ACTION" => "SetWindowTemp","VALUE" => $summarysensors));
+								}
 							} else {
 							   echo "Sensorvariable not exists!";
 							}
@@ -200,16 +202,7 @@
 					}
 				}
 				elseif ($function==0x54&&c_eFHZ_autoinit==true) {
-					/*
-					include_once(IPS_GetKernelDir()."bricks\eFHZ\class.eFHZ.php");
-					eFHZ::Begin();
-					$buf=array();$buf[0x65]=0xff;$buf[0x66]=0xff;
-					$str=eFHZ::xbuildsndstr(array(4=>2,5=>1,6=>0x83),$buf);
-					$str[7]=ord(substr($cmd,8,1));$str[8]=ord(substr($cmd,9,1));
-					$str=eFHZ::xstrBC($str);$str[2]=4;
-					IPS_LogMessage("eFHT-Brick","AutoInit started. (FHT ".$HC2.")");
-					eFHZ::xsndstr($str);
-					*/
+					IPS_RunScriptEx($ActionScriptID, Array("DEVICEID" => $deviceID,"ACTION" => "Init"));
 				}
 				elseif ($function==0x82) {
 					$this->SetIdentValue(c_control_eFHZ_suntemp_responce,$value/2,$deviceID);
@@ -255,10 +248,6 @@
 		$l.=$t;
 	}
 	echo "$l \n";
-	if (c_eFHZ_debug==true) {
-		$ReceivingDebugBuffer=IPSUtil_ObjectIDByPath('Program.IPSLibrary.app.hardware.IPSenhancedFHZ.IPSenhancedFHZ_Buffer.Debug');
-		SetValueString($ReceivingDebugBuffer,$l);
-	}
 
 	$housecode=(ord(substr($rcv,8,1))*100)+ord(substr($rcv,9,1));
    

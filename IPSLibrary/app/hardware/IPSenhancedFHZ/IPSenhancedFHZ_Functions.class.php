@@ -27,7 +27,7 @@
 	 */
 
    /**
-    * @class CheckFHZ
+    * @class eFHZ_Base
     *
     * Definiert das IPSenhancedFHZ Object, das den Empfang über den IPSenhancedFHZ-Puffer verarbeitet.
     *

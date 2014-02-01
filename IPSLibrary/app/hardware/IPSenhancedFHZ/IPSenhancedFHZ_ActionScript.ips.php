@@ -17,7 +17,7 @@
 	 */
 
    /**
-    * @class IPSenhancedFHZ
+    * @ingroup IPSenhancedFHZ
     *
     * Definiert das IPSenhancedFHZ Object, das den Versand und Empfang über den IPSenhancedFHZ-Puffer verarbeitet.
     *
@@ -29,20 +29,17 @@
 
 	IPSUtils_Include ("IPSenhancedFHZ.inc.php","IPSLibrary::app::hardware::IPSenhancedFHZ");
 
-	function Init($deviceID) {
-		$device=new IPSenhancedFHZ($deviceID);
-		echo ($device->ConnectionReady);
-		echo ($device->sFHT_Init());
-		echo chr(13);
-	}
-
 	switch ($_IPS['SENDER']) {
 		case 'TimerEvent':
 			$variableId   = $_IPS['EVENT'];
-			$strpos  	= strrpos(IPS_GetName($variableId), '|', 0);
-			$devicename = IPS_GetInstanceIDByName(substr(IPS_GetName($variableId),0, $strpos),);
+			$varname		= IPS_GetName($variableId);
+			$strpos1  	= strpos($varname, '|');
+			$strpos2  	= strrpos($varname, '|', 0);
+			$strpos3  	= strrpos($varname, '_', 0);
+			$devicename = IPS_GetInstanceIDByName(substr($varname,0, $strpos1));
 			$deviceID	= @IPSUtil_ObjectIDByPath('Program.IPSLibrary.data.hardware.IPSenhancedFHZ.Devices.'.$devicename,true);
-			$action		= substr(IPS_GetName($variableId), $strpos+1, strlen(IPS_GetName($variableId))-$strpos-1);
+			$action		= substr($varname, $strpos1+1, $strpos2-$strpos1-1);
+		   $sensor  	= substr($varname, $strpos3+1, strlen($varname)-$strpos2-1);
 			if ($action=='UpdateTime') {
 				$device=new IPSenhancedFHZ($deviceID);
 				$device->sFHZ_SetDateAndTime();
@@ -52,31 +49,43 @@
 		case 'Variable':
 			$variableId   = $_IPS['VARIABLE'];
 			$value        = $_IPS['VALUE'];
+			$varname		= IPS_GetName($variableId);
+			$strpos1  	= strpos($varname, '|');
+			$strpos2  	= strrpos($varname, '|', 0);
+			$strpos3  	= strrpos($varname, '_', 0);
+			$devicename = IPS_GetInstanceIDByName(substr($varname,0, $strpos1));
+			$deviceID	= @IPSUtil_ObjectIDByPath('Program.IPSLibrary.data.hardware.IPSenhancedFHZ.Devices.'.$devicename,true);
+			$action		= substr($varname, $strpos1+1, $strpos2-$strpos1-1);
+		   $sensor  	= substr($varname, $strpos3+1, strlen($varname)-$strpos2-1);
+			if ($action=='SetWindowTemp') {
+				$device=new IPSenhancedFHZ($deviceID);
+				$device->bFHT_SetTemperatureByWindowMode($value);
+				$device->bFHT_SendTo();
+			}
 		break;
 		
 		case 'RunScript':
 			$deviceID	  = $_IPS['DEVICEID'];
 			$action       = $_IPS['ACTION'];
 			if ($action=='Init') {
+				if (IPS_SemaphoreEnter("eFHZInitWait", 500)) {
+					$device=new IPSenhancedFHZ($deviceID);
+					$device->sFHT_Init();
+					IPS_SemaphoreLeave("eFHZInitWait"); 
+				}
+			}
+			elseif ($action=='SetWindowTemp') {
+				$value       = $_IPS['VALUE'];
 				$device=new IPSenhancedFHZ($deviceID);
-				$device->sFHT_Init();
+				$device->bFHT_SetTemperatureByWindowMode($value);
+				$device->bFHT_SendTo();
 			}
 		break;
-		
-		case 'Execute':
-			$deviceID	  = 16780;
-			$action       = 'Init';
-			if ($action=='Init') {
-				$device=new IPSenhancedFHZ($deviceID);
-				$device->sFHT_Init();
-			}
-		break;
-		
+				
 		default:
 			IPSLogger_Err(__file__, 'Unknown Sender '.$_IPS['SENDER']);
 		break;		
 	}
-
 
 	/** @}*/
 

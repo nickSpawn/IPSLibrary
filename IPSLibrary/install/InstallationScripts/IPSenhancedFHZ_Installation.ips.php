@@ -40,7 +40,7 @@
 	 * @file          IPSenhancedFHZ_Installation.ips.php
 	 * @author        Günter Strassnigg
 	 * @version
-	 *  Version 0.1.2, 05.01.2014<br/>
+	 *  Version 0.1.3, 05.01.2014<br/>
 	 *
 	 */
 
@@ -98,8 +98,9 @@
 	$categoryIdDevices = CreateCategory('Devices', $CategoryIdData, 10);
 
 	// Add Scripts
-	$scriptIdActionScript  = IPS_GetScriptIDByName('IPSenhancedFHZ_Receive', $CategoryIdApp);
+	$scriptIdReceiveScript = IPS_GetScriptIDByName('IPSenhancedFHZ_Receive', $CategoryIdApp);
 	$scriptIdRegVarScript  = IPS_GetScriptIDByName('IPSenhancedFHZ_RegVar', $CategoryIdApp);
+	$scriptIdActionScript  = IPS_GetScriptIDByName('IPSenhancedFHZ_ActionScript', $CategoryIdApp);
 
 	// Profiles
 	$IPSenhancedFHZ_eFHZDriveControl = array(
@@ -115,20 +116,20 @@
 	// Add IPSenhancedFHZ Receiving Buffer
 	// ----------------------------------------------------------------------------------------------------------------------------
    $InstanceId = CreateRegisterVariable('IPSenhancedFHZ_Buffer', $CategoryIdApp, $scriptIdRegVarScript, c_eFHZ_FTDIfhzID, 0); 
-	$VariableId = CreateVariable('Debug',  3 /*String*/,   $InstanceId,   1, '', '', '', '');
    
 	// ----------------------------------------------------------------------------------------------------------------------------
 	// Add IPSenhancedFHZ Devices
 	// ----------------------------------------------------------------------------------------------------------------------------
 	$IPSenhancedFHZonfig = IPSenhancedFHZ_GetFHZConfiguration();
 	foreach ($IPSenhancedFHZonfig as $deviceHousecode=>$deviceData) {
-		$deviceType = $deviceData[c_Property_eFHZ_Type];
-		$deviceName = $deviceData[c_Property_eFHZ_Name];
-		$deviceDescription = $deviceData[c_Property_eFHZ_Description];
+		$deviceType 			= $deviceData[c_Property_eFHZ_Type];
+		$deviceName 			= $deviceData[c_Property_eFHZ_Name];
+		$deviceDescription 	= $deviceData[c_Property_eFHZ_Description];
 
 		switch ($deviceType) {
 			case c_Type_eFHZ_FHT80b:
 				$deviceId   = CreateDummyInstance($deviceName, $categoryIdDevices,0);
+
 				$VariableId = CreateVariable(c_control_eFHZ_actual_temperature_responce,  2 /*Float*/,   $deviceId,   1, '~Temperature.FHT', null, 5.5,   'Temperature');
 				$VariableId = CreateVariable(c_control_eFHZ_position,                     2 /*Float*/,   $deviceId,   2, '~Valve.F',         null, 0.0,   'Gauge');
 				$VariableId = CreateVariable(c_control_eFHZ_battery,                      0 /*Boolean*/, $deviceId,   3, '~Battery',         null, false, 'Battery');
@@ -147,9 +148,9 @@
 				$VariableId = CreateVariable(c_control_eFHZ_partytime_responce,           3 /*String*/,  $deviceId,  16, '~String',          null, '',    'Clock');
 				$VariableId = CreateVariable(c_control_eFHZ_weekprogram_request,          3 /*String*/,  $deviceId,  17, '~String',          null, '',    'Calendar');
 				$VariableId = CreateVariable(c_control_eFHZ_weekprogram_responce,         3 /*String*/,  $deviceId,  18, '~String',          null, '',    'Calendar');
-				$VariableId = CreateVariable(c_control_eFHZ_autoinit,                     0 /*Boolean*/, $deviceId,  19, '~Switch',          null, false, 'Information');
 				$VariableId = CreateVariable(c_control_eFHZ_drivecontrol,                 1 /*Integer*/, $deviceId,  20, 'eFHZDriveControl', null, 0,     'Repeat');
 				$VariableId = CreateVariable(c_control_eFHZ_drivecontrol_timer,           1 /*Integer*/, $deviceId,  21, '',                 null, 0,     '');
+
 				$VariableId = RenameVariable(c_control_eFHZ_actual_temperature_responce, $deviceId, $lang);
 				$VariableId = RenameVariable(c_control_eFHZ_position,                    $deviceId, $lang);
 				$VariableId = RenameVariable(c_control_eFHZ_battery,                     $deviceId, $lang);
@@ -168,9 +169,18 @@
 				$VariableId = RenameVariable(c_control_eFHZ_partytime_responce,          $deviceId, $lang);
 				$VariableId = RenameVariable(c_control_eFHZ_weekprogram_request,         $deviceId, $lang);
 				$VariableId = RenameVariable(c_control_eFHZ_weekprogram_responce,        $deviceId, $lang);
-				$VariableId = RenameVariable(c_control_eFHZ_autoinit,                    $deviceId, $lang);
 				$VariableId = RenameVariable(c_control_eFHZ_drivecontrol,                $deviceId, $lang);
 				$VariableId = RenameVariable(c_control_eFHZ_drivecontrol_timer,          $deviceId, $lang);
+
+				if ($deviceWindowEmulate = $deviceData[c_Property_eFHZ_windowemulate]) {
+					$deviceWindowSensors = $deviceData[c_Property_eFHZ_windowsensors];			
+					while (list($sensor, $reverse) = each($deviceWindowSensors)) {
+					   if (IPS_VariableExists($sensor)) {
+							$triggerid = CreateEvent($deviceName.'|SetWindowTemp|Sensor_'.(string)$sensor, $sensor, $scriptIdActionScript, 1);
+							IPS_SetParent($triggerid,$scriptIdActionScript);
+						}
+					}
+				}		
         		break;
         		
 			case c_Type_eFHZ_FS20Switch:

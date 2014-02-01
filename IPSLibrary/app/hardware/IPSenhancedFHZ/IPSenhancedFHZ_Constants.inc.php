@@ -29,7 +29,6 @@
 	 */
 
 	// Confguration Device Property Definition 
-	define ('c_control_eFHZ_autoinit',								"autoinit");
 	define ('c_control_eFHZ_battery',								"battery");
 	define ('c_control_eFHZ_windowopen',							"windowopen");
 	define ('c_control_eFHZ_position',								"position");
@@ -37,7 +36,6 @@
 	define ('c_control_eFHZ_drivecontrol_timer',					"drivecontrol_timer");
 	define ('c_control_eFHZ_target_temperature_request',		"target_temperature_request");
 	define ('c_control_eFHZ_target_temperature_responce',		"target_temperature_responce");
-	define ('c_control_eFHZ_actual_temperature_request',		"actual_temperature_request");
 	define ('c_control_eFHZ_actual_temperature_responce',		"actual_temperature_responce");
 	define ('c_control_eFHZ_suntemp_request',						"suntemp_request");
 	define ('c_control_eFHZ_suntemp_responce',					"suntemp_responce");
@@ -54,7 +52,6 @@
   
 	define ('c_Type_eFHZ_FHT80b',										"FHT80b");
 	define ('c_Type_eFHZ_FS20Switch',								"FS20-Schalter");
-
 	
 	define ('c_Property_eFHZ_Type',									"Geraet");
 	define ('c_Property_eFHZ_Name',									"Name");

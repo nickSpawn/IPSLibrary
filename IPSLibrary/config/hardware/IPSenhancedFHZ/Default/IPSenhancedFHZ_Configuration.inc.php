@@ -29,18 +29,6 @@
 	 *
 	 */
 
-	/** Debugging des Empfangprotokolles
-	 *
-	 * Speichern des Empfangstrings in der Debug Variable
-	 * 
-	 * true:		Die Debugvariable wird überschrieben.
-	 * false:	Die Debugvariable wird nicht beschrieben.
-	 *          Hat jedoch keinen Einfluß auf die LogMeldungen im IPS Melungsfenster	 
-	 *
-	 * Dieser Parameter kann jederzeit geändert werden, keine Installation erforderlich.
-	 */
-   define ('c_eFHZ_debug',												false);
-
    
 	/** Loggen der Anfordungen(Statusänderungen) über IPSenhancedFHZ
 	 *
@@ -80,16 +68,18 @@
 	 *
 	 * Beispiel:
 	 * @code
-			function IPSenhancedFHZ_GetFHZConfiguration() {
-				return array(
-      			7336 =>	array(
-      				c_Property_eFHZ_Type		    		=> c_Type_eFHZ_FHT80b,
-      				c_Property_eFHZ_Name		    		=> 'eFHT80b_Buero',
-      				c_Property_eFHZ_Description		=> 'Büro',
-      				c_Property_eFHZ_Leap					=> false,
-      				),
-			   );
-			}
+		function IPSenhancedFHZ_GetFHZConfiguration() {
+			return array(
+					7336 =>	array(
+						c_Property_eFHZ_Type		    		=> c_Type_eFHZ_FHT80b,
+						c_Property_eFHZ_Name		    		=> 'eFHT80b_Buero',
+						c_Property_eFHZ_Description		=> 'Büro',
+						c_Property_eFHZ_Leap					=> false,
+						c_Property_eFHZ_windowemulate		=> false,
+						c_Property_eFHZ_windowsensors    => array (41110=>false),
+						),
+		   );
+		}
 	 * @endcocde
 	 *
 	 * @return  Liefert Array mit FHT und FS20 Elementen
