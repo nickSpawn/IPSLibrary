@@ -64,6 +64,27 @@
 	 */
 	define ('c_eFHZ_language',											"DE");
 
+	/** Objekt ID des FTDI Adapters 
+	 *
+	 * Betrifft:  Objekt ID des FTDI Adapters über den empfangen oder gesendet wird 
+	 * 				Das FTDI Gerät enthält den ELV FHZ Schnittstellencontroller	 
+	 *
+	 * Nach Änderung dieses Parameters muss eine erneute Installation über den ModuleManagers durchgeführt werden.
+	 */
+	define ('c_eFHZ_FTDIfhzID',										0);
+
+	/** Start der Autoinitialisierung der FHT's
+	 *
+	 * Betrifft:  Falls der Handshake zwischen FHZ und FHT gestört ist:
+	 * 				eine automatische Initialisierung des betreffenden FHT's durchführen	  
+	 *
+	 * true:		wird verarbeitet.
+	 * false:	wird nicht verarbeitet.	 
+	 *
+	 * Dieser Parameter kann jederzeit geändert werden, keine Installation erforderlich.
+	 */
+	define ('c_eFHZ_autoinit',											true);
+
 	/**
 	 *
 	 * Beispiel:
