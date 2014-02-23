@@ -1,0 +1,711 @@
+<?
+	/*
+	 * This file is part of the IPSLibrary.
+	 *
+	 * The IPSLibrary is free software: you can redistribute it and/or modify
+	 * it under the terms of the GNU General Public License as published
+	 * by the Free Software Foundation, either version 3 of the License, or
+	 * (at your option) any later version.
+	 *
+	 * The IPSLibrary is distributed in the hope that it will be useful,
+	 * but WITHOUT ANY WARRANTY; without even the implied warranty of
+	 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	 * GNU General Public License for more details.
+	 *
+	 * You should have received a copy of the GNU General Public License
+	 * along with the IPSLibrary. If not, see http://www.gnu.org/licenses/gpl.txt.
+	 */    
+
+	/**@addtogroup ipslight
+	 * @{
+	 *
+	 * @file          IPSLight_Manager.class.php
+	 * @author        Andreas Brauneis
+	 * @version
+	 *   Version 2.50.1, 26.07.2012<br/>
+	 *
+	 * IPSLight Licht Management
+	 */
+
+	/**
+	 * @class IPSLight_Manager
+	 *
+	 * Definiert ein IPSLight_Manager Objekt
+	 *
+	 * @author Andreas Brauneis
+	 * @version
+	 *   Version 2.50.1, 26.07.2012<br/>
+	 */
+	class IPSLight_Manager {
+
+		/**
+		 * @private
+		 * ID Kategorie mit Schalter und Dimmern
+		 */
+		private $switchCategoryId;
+
+		/**
+		 * @private
+		 * ID Kategorie mit Schalter
+		 */
+		private $groupCategoryId;
+
+		/**
+		 * @private
+		 * ID Kategorie mit Programmen
+		 */
+		private $programCategoryId;
+
+		/**
+		 * @public
+		 *
+		 * Initialisierung des IPSLight_Manager Objektes
+		 *
+		 */
+		public function __construct() {
+			$baseId = IPSUtil_ObjectIDByPath('Program.IPSLibrary.data.modules.IPSLight');
+			$this->switchCategoryId  = IPS_GetObjectIDByIdent('Switches', $baseId);
+			$this->groupCategoryId   = IPS_GetObjectIDByIdent('Groups', $baseId);
+			$this->programCategoryId = IPS_GetObjectIDByIdent('Programs', $baseId);
+		}
+
+		/**
+		 * @public
+		 *
+		 * Liefert ID eines Schalters anhand des Namens
+		 *
+		 * @param string $name Name des Schalters
+		 * @return int ID des Schalters 
+		 */
+		public function GetSwitchIdByName($name) {
+			return IPS_GetVariableIDByName($name, $this->switchCategoryId);
+		}
+
+		/**
+		 * @public
+		 *
+		 * Liefert ID einer Level Variable eines Dimmers anhand des Namens
+		 *
+		 * @param string $name Name des Dimmers
+		 * @return int ID der Level Variable
+		 */
+		public function GetLevelIdByName($name) {
+			return IPS_GetVariableIDByName($name.IPSLIGHT_DEVICE_LEVEL, $this->switchCategoryId);
+		}
+
+		/**
+		 * @public
+		 *
+		 * Liefert ID einer RGB Variable anhand des Namens
+		 *
+		 * @param string $name Name des RGB Lichtes
+		 * @return int ID der RGB Variable
+		 */
+		public function GetColorIdByName($name) {
+			return IPS_GetVariableIDByName($name.IPSLIGHT_DEVICE_COLOR, $this->switchCategoryId);
+		}
+
+		/**
+		 * @public
+		 *
+		 * Liefert ID eines Gruppen Schalters anhand des Namens
+		 *
+		 * @param string $name Name der Gruppe
+		 * @return int ID der Gruppe
+		 */
+		public function GetGroupIdByName($name) {
+			return IPS_GetVariableIDByName($name, $this->groupCategoryId);
+		}
+
+		/**
+		 * @public
+		 *
+		 * Liefert ID eines Programm Schalters anhand des Namens
+		 *
+		 * @param string $name Name des Programm Schalters
+		 * @return int ID des Programm Schalters
+		 */
+		public function GetProgramIdByName($name) {
+			return IPS_GetVariableIDByName($name, $this->programCategoryId);
+		}
+
+		/**
+		 * @public
+		 *
+		 * Liefert Wert einer Control Variable (Schalter, Dimmer, Gruppe, ...) anhand der zugehörigen ID
+		 *
+		 * @param string $variableId ID der Variable
+		 * @return int Wert der Variable
+		 */
+		public function GetValue($variableId) {
+			return GetValue($variableId);
+		}
+
+		/**
+		 * @public
+		 *
+		 * Setzt den Wert einer Control Variable (Schalter, Dimmer, Gruppe, ...) anhand der zugehörigen ID
+		 *
+		 * @param int $variableId ID der Variable
+		 * @param int $value Neuer Wert der Variable
+		 */
+		public function SetValue($variableId, $value) {
+			$parentId = IPS_GetParent($variableId);
+			switch($parentId) {
+				case $this->switchCategoryId:
+					$configName = $this->GetConfigNameById($variableId);
+					$configLights = IPSLight_GetLightConfiguration();
+					$lightType    = $configLights[$configName][IPSLIGHT_TYPE];
+					if ($lightType==IPSLIGHT_TYPE_SWITCH) {
+						$this->SetSwitch($variableId, $value);
+					} elseif ($lightType==IPSLIGHT_TYPE_DIMMER) {
+						$this->SetDimmer($variableId, $value);
+					} elseif ($lightType==IPSLIGHT_TYPE_RGB) {
+						$this->SetRGB($variableId, $value);
+					} else {
+						trigger_error('Unknown LightType '.$lightType.' for Light '.$configName);
+					}
+					break;
+				case $this->groupCategoryId:
+					$this->SetGroup($variableId, $value);
+					break;
+				case $this->programCategoryId:
+					$this->SetProgram($variableId, $value);
+					break;
+				default:
+					trigger_error('Unknown ControlId '.$variableId);
+			}
+		}
+
+		/**
+		 * @public
+		 *
+		 * Setzt den Wert einer Schalter Variable anhand der zugehörigen ID
+		 *
+		 * @param int $switchId ID der Variable
+		 * @param bool $value Neuer Wert der Variable
+		 */
+		public function SetSwitch($switchId, $value, $syncGroups=true, $syncPrograms=true) {
+			if (GetValue($switchId)==$value) {
+				return;
+			}
+			$configName   = $this->GetConfigNameById($switchId);
+			$configLights = IPSLight_GetLightConfiguration();
+			$componentParams = $configLights[$configName][IPSLIGHT_COMPONENT];
+			$component       = IPSComponent::CreateObjectByParams($componentParams);
+
+			if ($this->SetTimer($configName, $configLights, $switchId, $value)) {
+				return;
+			}
+
+			SetValue($switchId, $value);
+			IPSLogger_Inf(__file__, 'Turn Light '.$configName.' '.($value?'On':'Off'));
+
+			if (IPSLight_BeforeSwitch($switchId, $value)) {
+				$component->SetState($value);
+			}
+			IPSLight_AfterSwitch($switchId, $value);
+
+			if ($syncGroups) {
+				$this->SynchronizeGroupsBySwitch($switchId);
+			}
+			if ($syncPrograms) {
+				$this->SynchronizeProgramsBySwitch ($switchId);
+			}
+		}
+
+		/**
+		 * @public
+		 *
+		 * Setzt den Wert einer Dimmer Variable anhand der zugehörigen ID
+		 *
+		 * @param int $variableId ID der Variable
+		 * @param bool $value Neuer Wert der Variable
+		 */
+		public function SetDimmer($variableId, $value, $syncGroups=true, $syncPrograms=true) {
+			if (GetValue($variableId)==$value) {
+				return;
+			}
+			$configName   = $this->GetConfigNameById($variableId);
+			$configLights = IPSLight_GetLightConfiguration();
+			$switchId     = IPS_GetVariableIDByName($configName, $this->switchCategoryId);
+			$switchValue  = GetValue($switchId);
+			$levelId      = IPS_GetVariableIDByName($configName.IPSLIGHT_DEVICE_LEVEL, $this->switchCategoryId);
+			$levelValue   = GetValue($levelId);
+
+			$componentParams = $configLights[$configName][IPSLIGHT_COMPONENT];
+			$component       = IPSComponent::CreateObjectByParams($componentParams);
+
+			if ($variableId==$levelId) {
+			   if (!$switchValue and $value>0) {
+				   SetValue($switchId, true);
+			   } else if ($switchValue and $value==0) {
+				   SetValue($switchId, false);
+			   } else {
+			   }
+			   if (GetValue($levelId) > 100) { $value = 100; }
+				if (GetValue($levelId) < 0)   { $value = 0; }
+			} else {
+			   if ($value and $levelValue==0) {
+			      SetValue($levelId, 10);
+			   }
+			}
+			SetValue($variableId, $value);
+
+			$switchValue  = GetValue($switchId);
+			IPSLogger_Inf(__file__, 'Turn Light '.$configName.' '.($switchValue?'On, Level='.GetValue($levelId):'Off'));
+
+			if (IPSLight_BeforeSwitch($switchId, $switchValue)) {
+				$component->SetState(GetValue($switchId), GetValue($levelId));
+			}
+			IPSLight_AfterSwitch($switchId, $switchValue);
+
+			if ($syncGroups) {
+				$this->SynchronizeGroupsBySwitch($switchId);
+			}
+			if ($syncPrograms) {
+				$this->SynchronizeProgramsBySwitch ($switchId);
+			}
+		}
+
+		/**
+		 * @public
+		 *
+		 * Setzt den Wert einer RGB Farb Variable anhand der zugehörigen ID
+		 *
+		 * @param int $variableId ID der Variable
+		 * @param bool $value Neuer Wert der Variable
+		 */
+		public function SetRGB($variableId, $value, $syncGroups=true, $syncPrograms=true) {
+			if (GetValue($variableId)==$value) {
+				return;
+			}
+			$configName   = $this->GetConfigNameById($variableId);
+			$configLights = IPSLight_GetLightConfiguration();
+			$switchId     = IPS_GetVariableIDByName($configName, $this->switchCategoryId);
+			$colorId      = IPS_GetVariableIDByName($configName.IPSLIGHT_DEVICE_COLOR, $this->switchCategoryId);
+			$levelId      = IPS_GetVariableIDByName($configName.IPSLIGHT_DEVICE_LEVEL, $this->switchCategoryId);
+			$switchValue  = GetValue($switchId);
+
+			$componentParams = $configLights[$configName][IPSLIGHT_COMPONENT];
+			$component       = IPSComponent::CreateObjectByParams($componentParams);
+
+			SetValue($variableId, $value);
+			if (!$switchValue and ($variableId==$levelId or $variableId==$colorId)) {
+				SetValue($switchId, true);
+			}
+			$switchValue  = GetValue($switchId);
+			IPSLogger_Inf(__file__, 'Turn Light '.$configName.' '.($switchValue?'On, Level='.GetValue($levelId).', Color='.GetValue($colorId):'Off'));
+
+			if (IPSLight_BeforeSwitch($switchId, $switchValue)) {
+				$component->SetState(GetValue($switchId), GetValue($colorId), GetValue($levelId));
+			}
+			IPSLight_AfterSwitch($switchId, $switchValue);
+
+			if ($syncGroups) {
+				$this->SynchronizeGroupsBySwitch($switchId);
+			}
+			if ($syncPrograms) {
+				$this->SynchronizeProgramsBySwitch ($switchId);
+			}
+		}
+
+		/**
+		 * @public
+		 *
+		 * Setzt den Wert einer Gruppen Variable anhand der zugehörigen ID
+		 *
+		 * @param int $variableId ID der Gruppe
+		 * @param bool $value Neuer Wert der Gruppe
+		 */
+		public function SetGroup($groupId, $value) {
+			$groupConfig = IPSLight_GetGroupConfiguration();
+			$groupName   = IPS_GetName($groupId);
+			if ($value and !$groupConfig[$groupName][IPSLIGHT_ACTIVATABLE]) {
+				IPSLogger_Trc(__file__, "Ignore ".($value?'On':'Off')." forLightGroup '$groupName' (not allowed)");
+			} else {
+				SetValue($groupId, $value);
+				IPSLogger_Inf(__file__, "Turn LightGroup '$groupName' ".($value?'On':'Off'));
+				$this->SetAllSwitchesByGroup($groupId);
+			}
+		}
+
+		/**
+		 * @public
+		 *
+		 * Setzt den Wert einer Programm Variable anhand der zugehörigen ID
+		 *
+		 * @param int $variableId ID der Programm Variable
+		 * @param bool $value Neuer Wert der Programm Variable
+		 */
+		public function SetProgram($programId, $value) {
+			$programName     = IPS_GetName($programId);
+			$programConfig   = IPSLight_GetProgramConfiguration();
+			$programKeys     = array_keys($programConfig[$programName]);
+			if ($value>(count($programKeys)-1)) { 
+				$value=0;
+			}
+			$programItemName = $programKeys[$value];
+
+			IPSLogger_Inf(__file__, "Set Program $programName=$value ");
+
+			// Light On
+			if (array_key_exists(IPSLIGHT_PROGRAMON,  $programConfig[$programName][$programItemName])) {
+				$switches = $programConfig[$programName][$programItemName][IPSLIGHT_PROGRAMON];
+				$switches = explode(',',  $switches);
+				foreach ($switches as $idx=>$switchName) {
+					if ($switchName <> '') {
+						$switchId = $this->GetSwitchIdByName($switchName);
+						$configLights = IPSLight_GetLightConfiguration();
+						$lightType    = $configLights[$switchName][IPSLIGHT_TYPE];
+						if ($lightType==IPSLIGHT_TYPE_SWITCH) {
+							$this->SetSwitch($switchId, true);
+						} elseif ($lightType==IPSLIGHT_TYPE_DIMMER) {
+							$this->SetDimmer($switchId, true);
+						} elseif ($lightType==IPSLIGHT_TYPE_RGB) {
+							$this->SetRGB($switchId, true);
+						} else {
+							trigger_error('Unknown LightType '.$lightType.' for Light '.$configName);
+						}
+					}
+				}
+			}
+			// Light Off
+			if (array_key_exists(IPSLIGHT_PROGRAMOFF,  $programConfig[$programName][$programItemName])) {
+				$switches = $programConfig[$programName][$programItemName][IPSLIGHT_PROGRAMOFF];
+				$switches = explode(',',  $switches);
+				foreach ($switches as $idx=>$switchName) {
+					if ($switchName <> '') {
+						$switchId = $this->GetSwitchIdByName($switchName);
+						$configLights = IPSLight_GetLightConfiguration();
+						$lightType    = $configLights[$switchName][IPSLIGHT_TYPE];
+						if ($lightType==IPSLIGHT_TYPE_SWITCH) {
+							$this->SetSwitch($switchId, false);
+						} elseif ($lightType==IPSLIGHT_TYPE_DIMMER) {
+							$this->SetDimmer($switchId, false);
+						} elseif ($lightType==IPSLIGHT_TYPE_RGB) {
+							$this->SetRGB($switchId, false);
+						} else {
+							trigger_error('Unknown LightType '.$lightType.' for Light '.$configName);
+						}
+					}
+				}
+			}
+			// Light Level
+			if (array_key_exists(IPSLIGHT_PROGRAMLEVEL,  $programConfig[$programName][$programItemName])) {
+				$switches = $programConfig[$programName][$programItemName][IPSLIGHT_PROGRAMLEVEL];
+				$switches = explode(',',  $switches);
+				for ($idx=0; $idx<Count($switches)-1; $idx=$idx+2) {
+					$switchName  = $switches[$idx];
+					$switchValue = (float)$switches[$idx+1];
+					$switchId    = $this->GetSwitchIdByName($switchName);
+					$this->SetDimmer($switchId, true, true, false);
+					$switchId    = $this->GetSwitchIdByName($switchName.IPSLIGHT_DEVICE_LEVEL);
+					$this->SetDimmer($switchId, $switchValue, true, false);
+				}
+			}
+			// Light RGB
+			if (array_key_exists(IPSLIGHT_PROGRAMRGB,  $programConfig[$programName][$programItemName])) {
+				$switches = $programConfig[$programName][$programItemName][IPSLIGHT_PROGRAMRGB];
+				$switches = explode(',',  $switches);
+				for ($idx=0; $idx<Count($switches)-1; $idx=$idx+5) {
+					$switchName   = $switches[$idx];
+					$switchLevel  = (float)$switches[$idx+1];
+					$switchColorR = (float)$switches[$idx+2];
+					$switchColorG = (float)$switches[$idx+3];
+					$switchColorB = (float)$switches[$idx+4];
+					$switchColor  = $switchColorR*256*256+$switchColorG*256+$switchColorB;
+
+					$switchId     = $this->GetSwitchIdByName($switchName);
+					$this->SetRGB($switchId, true, true, false);
+					$switchId    = $this->GetSwitchIdByName($switchName.IPSLIGHT_DEVICE_LEVEL);
+					$this->SetRGB($switchId, $switchLevel, true, false);
+					$switchId    = $this->GetSwitchIdByName($switchName.IPSLIGHT_DEVICE_COLOR);
+					$this->SetRGB($switchId, $switchColor, true, false);
+				}
+			}
+			SetValue($programId, $value);
+		}
+
+		// ----------------------------------------------------------------------------------------------------------------------------
+		private function GetConfigNameById($switchId) {
+			$switchName = IPS_GetName($switchId);
+			$switchName = str_replace(IPSLIGHT_DEVICE_COLOR, '', $switchName);
+			$switchName = str_replace(IPSLIGHT_DEVICE_LEVEL, '', $switchName);
+
+			return $switchName;
+		}
+
+		// ----------------------------------------------------------------------------------------------------------------------------
+		private function SynchronizeGroupsBySwitch ($switchId) {
+			$switchName  = IPS_GetName($switchId);
+			$lightConfig = IPSLight_GetLightConfiguration();
+			$groups      = explode(',', $lightConfig[$switchName][IPSLIGHT_GROUPS]);
+			foreach ($groups as $groupName) {
+				$groupId  = IPS_GetVariableIDByName($groupName, $this->groupCategoryId);
+				$this->SynchronizeGroup($groupId);
+			}
+		}
+
+		// ----------------------------------------------------------------------------------------------------------------------------
+		private function SynchronizeGroup ($groupId) {
+			$lightConfig = IPSLight_GetLightConfiguration();
+			$groupName   = IPS_GetName($groupId);
+			$groupState  = false;
+			foreach ($lightConfig as $switchName=>$deviceData) {
+				$switchId      = IPS_GetVariableIDByName($switchName, $this->switchCategoryId);
+				$switchState   = GetValue($switchId);
+				$switchInGroup = array_key_exists($groupName, array_flip(explode(',', $deviceData[IPSLIGHT_GROUPS])));
+				if ($switchInGroup and GetValue($switchId)) {
+					$groupState = true;
+					break;
+				}
+			}
+			if (GetValue($groupId) <> $groupState) {
+				IPSLogger_Trc(__file__, "Synchronize ".($switchState?'On':'Off')." to Group '$groupName' from Switch '$switchName'");
+				SetValue($groupId, $groupState);
+			}
+		}
+
+		// ----------------------------------------------------------------------------------------------------------------------------
+		private function SynchronizeProgramsBySwitch($switchId) {
+			$switchName = IPS_GetName($switchId);
+			$programConfig   = IPSLight_GetProgramConfiguration();
+
+			foreach ($programConfig as $programName=>$programData) {
+				foreach ($programData as $programItemName=>$programItemData) {
+					if (array_key_exists(IPSLIGHT_PROGRAMON, $programItemData)) {
+						if ($this->SynchronizeProgramItemBySwitch($switchName, $programName, $programItemData[IPSLIGHT_PROGRAMON])) {
+							return;
+						}
+					}
+					if (array_key_exists(IPSLIGHT_PROGRAMOFF, $programItemData)) {
+						if ($this->SynchronizeProgramItemBySwitch($switchName, $programName, $programItemData[IPSLIGHT_PROGRAMOFF])) {
+							return;
+						}
+					}
+					if (array_key_exists(IPSLIGHT_PROGRAMLEVEL, $programItemData)) {
+						if ($this->SynchronizeProgramItemBySwitch($switchName, $programName, $programItemData[IPSLIGHT_PROGRAMLEVEL])) {
+							return;
+						}
+					}
+				}
+			}
+		}
+
+		// ----------------------------------------------------------------------------------------------------------------------------
+		private function SynchronizeProgramItemBySwitch($switchName, $programName, $property) {
+			$propertyList = explode(',', $property);
+			$switchList = array_flip($propertyList);
+			if (array_key_exists($switchName,  $switchList)) {
+				$programId   = IPS_GetVariableIDByName($programName, $this->programCategoryId);
+				IPSLogger_Trc(__file__, "Reset Program '$programName' by manual Change of '$switchName'");
+				SetValue($programId, 0);
+				return true;
+			}
+			return false;
+		}
+
+		// ----------------------------------------------------------------------------------------------------------------------------
+		private function SetAllSwitchesByGroup ($groupId) {
+			$groupName    = IPS_GetName($groupId);
+			$lightConfig  = IPSLight_GetLightConfiguration();
+			$groupState   = GetValue($groupId);
+			foreach ($lightConfig as $switchName=>$deviceData) {
+				$switchId      = IPS_GetVariableIDByName($switchName, $this->switchCategoryId);
+				$switchInGroup = array_key_exists($groupName, array_flip(explode(',', $deviceData[IPSLIGHT_GROUPS])));
+				if ($switchInGroup and GetValue($switchId)<>$groupState) {
+					IPSLogger_Trc(__file__, "Set Light $switchName=".($groupState?'On':'Off')." for Group '$groupName'");
+					$this->SetValue($switchId, $groupState);
+					$this->SynchronizeGroupsBySwitch ($switchId);
+				}
+			}
+		}
+
+		public function SynchronizeSwitch($switchName, $deviceState) {
+			$switchId    = IPS_GetVariableIDByName($switchName, $this->switchCategoryId);
+
+			$lightConfig = IPSLight_GetLightConfiguration();
+			$deviceType  = $lightConfig[$switchName][IPSLIGHT_TYPE];
+
+         if ($this->SetTimer($switchName, $lightConfig, $switchId, $deviceState,true)) {
+				return;
+			}
+
+			IPSLogger_Trc(__file__, "Received StateChange from Light '$switchName'=$deviceState");
+			if (IPSLight_BeforeSynchronizeSwitch($switchId, $deviceState)) {
+				if (GetValue($switchId) <> $deviceState) {									
+					IPSLogger_Inf(__file__, 'Synchronize StateChange from Light '.$switchName.', State='.($deviceState?'On':'Off'));
+					SetValue($switchId, $deviceState);
+					$this->SynchronizeGroupsBySwitch($switchId);
+					$this->SynchronizeProgramsBySwitch($switchId);
+				}
+			}
+			IPSLight_AfterSynchronizeSwitch($switchId, $deviceState);
+		}
+
+
+		public function SynchronizeDimmer($switchName, $deviceState, $deviceLevel) {
+			IPSLogger_Trc(__file__, 'Received StateChange from Light '.$switchName.', State='.$deviceState.', Level='.$deviceLevel);
+			$switchId    = IPS_GetVariableIDByName($switchName, $this->switchCategoryId);
+			$levelId     = IPS_GetVariableIDByName($switchName.IPSLIGHT_DEVICE_LEVEL, $this->switchCategoryId);
+
+			$lightConfig = IPSLight_GetLightConfiguration();
+			$deviceType  = $lightConfig[$switchName][IPSLIGHT_TYPE];
+
+			if (IPSLight_BeforeSynchronizeSwitch($switchId, $deviceState)) {
+				if (GetValue($switchId)<>$deviceState or GetValue($levelId)<>$deviceLevel) {
+					IPSLogger_Inf(__file__, 'Synchronize StateChange from Light '.$switchName.', State='.($deviceState?'On':'Off').', Level='.$deviceLevel);
+					SetValue($switchId, $deviceState);
+					SetValue($levelId, $deviceLevel);
+					$this->SynchronizeGroupsBySwitch($switchId);
+					$this->SynchronizeProgramsBySwitch($switchId);
+				}
+			}
+			IPSLight_AfterSynchronizeSwitch($switchId, $deviceState);
+		}
+		
+		public function GetPowerConsumption($powerCircle) {
+			$powerConsumption = 0;
+			$lightConfig      = IPSLight_GetLightConfiguration();
+			foreach ($lightConfig as $switchName=>$deviceData) {
+				$lightType  = $lightConfig[$switchName][IPSLIGHT_TYPE];
+				if (array_key_exists(IPSLIGHT_POWERCIRCLE, $deviceData) and $deviceData[IPSLIGHT_POWERCIRCLE]==$powerCircle) {
+					$switchId = IPS_GetVariableIDByName($switchName, $this->switchCategoryId);
+					if (GetValue($switchId)) {
+						switch ($lightType) {
+							case IPSLIGHT_TYPE_SWITCH:
+								$powerConsumption = $powerConsumption + $deviceData[IPSLIGHT_POWERWATT];
+								break;
+							case IPSLIGHT_TYPE_DIMMER:
+							case IPSLIGHT_TYPE_RGB:
+								$levelId = IPS_GetVariableIDByName($switchName.IPSLIGHT_DEVICE_LEVEL, $this->switchCategoryId);
+								$powerConsumption = $powerConsumption + $deviceData[IPSLIGHT_POWERWATT]*GetValue($levelId)/100;
+								break;
+							default:
+								trigger_error('Unknown LightType '.$lightType.' for Light '.$configName);
+						}
+					}
+				}
+			}
+			return $powerConsumption;
+		}
+
+		public function CreateTimer($Name, $ParentId, $Seconds, $Active=true) {
+			$TimerId = @IPS_GetEventIDByName($Name, $ParentId);
+			if ($TimerId === false) {
+				$TimerId = IPS_CreateEvent(1 /*Cyclic Event*/);
+			}
+			IPS_SetParent($TimerId, $ParentId);
+			IPS_SetName($TimerId, $Name);
+			if (!IPS_SetEventCyclic($TimerId, 1 /*Daily*/, 0 /*Int*/,0 /*Days*/,0/*DayInt*/,1/*Seconds*/,$Seconds/*Sec*/)) {
+				Error ("IPS_SetEventCyclic failed !!!");
+			}
+			IPS_SetEventCyclicDateBounds($TimerId,mktime((int)date("n",time()),(int)date("j",time()),(int)date("Y",time())),
+			      										  mktime((int)date("n",time()),(int)date("h",time()),(int)date("Y",time())));
+			IPS_SetEventCyclicTimeBounds($TimerId,mktime((int)date("H",time()),(int)date("i",time()),(int)date("s",time())),
+			      										  mktime((int)date("H",time()),(int)date("i",time()),(int)date("s",time())+$Seconds+0.1));
+			IPS_SetEventActive($TimerId, $Active);
+
+			return $TimerId;
+		}
+		
+		public function DeleteTimer($switchId, $TimerId) {
+			$actionScriptId = IPSUtil_ObjectIDByPath('Program.IPSLibrary.app.modules.IPSLight.IPSLight_ActionScript');
+			$Name='Switches|'.(string)$TimerId.'|'.$switchId;
+			$TimerId = @IPS_GetEventIDByName($Name, $actionScriptId);
+ 			IPS_DeleteEvent($TimerId);
+		}
+		
+		public function ActivateTimer($switchId, $TimerId,$status) {
+			$actionScriptId = IPSUtil_ObjectIDByPath('Program.IPSLibrary.app.modules.IPSLight.IPSLight_ActionScript');
+			$Name='Switches|'.(string)$TimerId.'|'.$switchId;
+			$TimerId = @IPS_GetEventIDByName($Name, $actionScriptId);
+ 			IPS_SetEventActive($TimerId,$status);
+		}
+		
+		/**
+		 * @private
+		 *
+		 * Setzt den Wert einer Schalter Variable anhand der zugehörigen ID
+		 *
+		 * @param string $configName ID der Variable
+		 * @param array $configLights ID der Variable
+		 * @param int $switchId ID der Variable
+		 * @param bool $value Neuer Wert der Variable
+		 * @param bool $sync_switch Neuer Wert der Variable
+		 */
+		private function SetTimer($configName, $configLights, $switchId, $value, $sync_switch=false) {
+			if (array_key_exists(IPSLIGHT_TIMERCONFIG,$configLights[$configName])) {
+				$oldvalue=GetValue($switchId);
+				$actionScriptId = IPSUtil_ObjectIDByPath('Program.IPSLibrary.app.modules.IPSLight.IPSLight_ActionScript');
+				$configTimers = $configLights[$configName][IPSLIGHT_TIMERCONFIG];
+				if (array_key_exists(IPSLIGHT_EDGE_CONTROLLED,$configTimers)) {
+					$flanks=$configTimers[IPSLIGHT_EDGE_CONTROLLED];
+				} else {
+				   $flanks=IPSLIGHT_BOTH_FLANKS;
+			   }
+
+				$switchdelayon_Name	='Switches|'.(string)IPSLIGHT_SWITCHONDELAY.'|'.$switchId;
+				$switchdelayon_Id 	= @IPS_GetEventIDByName($switchdelayon_Name, $actionScriptId);
+
+				$timer_Name				='Switches|'.(string)IPSLIGHT_TIMER.'|'.$switchId;
+				$timer_Id 				= @IPS_GetEventIDByName($timer_Name, $actionScriptId);
+
+				$switchdelayoff_Name	='Switches|'.(string)IPSLIGHT_SWITCHOFFDELAY.'|'.$switchId;
+				$switchdelayoff_Id	= @IPS_GetEventIDByName($switchdelayoff_Name, $actionScriptId);
+
+				if ($sync_switch==false && array_key_exists(IPSLIGHT_SWITCHONDELAY,$configTimers) && $oldvalue==false) {
+					$timer=@IPS_GetEvent($switchdelayon_Id);
+					if ($switchdelayon_Id===false && $timer_Id===false && $switchdelayoff_Id===false && $value==true) {
+						$switch_delay_on=$configTimers[IPSLIGHT_SWITCHONDELAY];
+						$this->CreateTimer($switchdelayon_Name,$actionScriptId,$switch_delay_on);
+						IPS_SetVariableCustomProfile($switchId,'IPSLight_OnDelayed');
+						return true;
+					} elseif ($switchdelayon_Id && $timer['LastRun']>0) {
+						$this->DeleteTimer($switchId,IPSLIGHT_SWITCHONDELAY);
+						IPS_SetVariableCustomProfile($switchId,'~Switch');
+					} else {
+						return true;
+					}
+				}
+				if (array_key_exists(IPSLIGHT_TIMER,$configTimers)) {
+					$timer=@IPS_GetEvent($timer_Id);
+					if ($timer_Id===false && $switchdelayoff_Id===false && $value==true) {
+						$switch_timer=$configTimers[IPSLIGHT_TIMER];
+						$this->CreateTimer($timer_Name,$actionScriptId,$switch_timer);
+						IPS_SetVariableCustomProfile($switchId,'IPSLight_Timer');
+					} elseif ($timer_Id && $timer['LastRun']==0 && $value==false) {
+  						if ($flanks==IPSLIGHT_RISING_EDGE) {
+	 	   					return true;
+	   					}
+						$this->DeleteTimer($switchId,IPSLIGHT_TIMER);   
+ 						IPS_SetVariableCustomProfile($switchId,'~Switch');
+					} elseif ($timer_Id && $value==false) {
+						$this->DeleteTimer($switchId,IPSLIGHT_TIMER);   
+						IPS_SetVariableCustomProfile($switchId,'~Switch');
+					}
+				}
+				if ($sync_switch==false && array_key_exists(IPSLIGHT_SWITCHOFFDELAY,$configTimers) && $oldvalue==true) {
+					$timer=@IPS_GetEvent($switchdelayoff_Id);
+					$timer_Id = @IPS_GetEventIDByName($timer_Name, $actionScriptId);
+					if ($timer_Id===false && $switchdelayoff_Id===false && $value==false) {
+						$switch_delay_off=$configTimers[IPSLIGHT_SWITCHOFFDELAY];
+						$this->CreateTimer($switchdelayoff_Name,$actionScriptId,$switch_delay_off);
+						IPS_SetVariableCustomProfile($switchId,'IPSLight_OffDelayed');
+						return true;
+					} elseif ($switchdelayoff_Id && $timer['LastRun']>0) {
+						$this->DeleteTimer($switchId,IPSLIGHT_SWITCHOFFDELAY);
+						IPS_SetVariableCustomProfile($switchId,'~Switch');
+					} else {
+						return true;
+					}
+				}
+			}
+		}
+
+		
+	}
+
+	/** @}*/
+?>
